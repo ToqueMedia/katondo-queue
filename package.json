@@ -1,0 +1,28 @@
+{
+  "name": "katondo-queue",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Gestão de Filas — Clínica Katondo",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "npm run dev --workspace=server",
+    "dev:client": "npm run dev --workspace=client",
+    "build": "npm run build --workspace=server && npm run build --workspace=client",
+    "build:server": "npm run build --workspace=server",
+    "build:client": "npm run build --workspace=client",
+    "seed": "npm run seed --workspace=server",
+    "start": "npm run start --workspace=server",
+    "db:migrate": "npm run db:migrate --workspace=server",
+    "db:push": "npm run db:push --workspace=server"
+  },
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "dependencies": {
+    "geist": "^1.7.2"
+  }
+}

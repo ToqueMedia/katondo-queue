@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Katondo Display</string>
+    <!-- URL do servidor — alterar para o IP da clínica em produção -->
+    <string name="server_url">http://192.168.1.100:3001</string>
+</resources>

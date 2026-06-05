@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build outputs (rebuilt inside container)
+dist/
+client/dist/
+
+# Git
+.git/
+.gitignore
+
+# Environment files (secrets)
+.env
+.env.*
+*.pem
+*.key
+
+# Logs and OS files
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Documentation (não precisa no container)
+README.md
+CLAUDE.md
+TMS.md
+docs/
+*.md
+
+# Docker files (não precisam dentro do container)
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+deploy.sh

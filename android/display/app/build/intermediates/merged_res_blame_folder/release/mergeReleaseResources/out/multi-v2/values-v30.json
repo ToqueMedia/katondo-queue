@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "ao.katondo.display.app-mergeReleaseResources-54:/values-v30/values-v30.xml",
+            "map": [
+                {
+                    "source": "/Users/ithustle/.gradle/caches/9.4.1/transforms/9cafa05c8a8a03db46f7c49f9365477e/transformed/material3/res/values-v30/values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "72",
+                        "endOffsets": "123"
+                    }
+                }
+            ]
+        }
+    ]
+}

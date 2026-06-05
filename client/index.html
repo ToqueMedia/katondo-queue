@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestão de Filas — Clínica Katondo</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+    <script>
+      // Polyfill inline para garantir que globalThis exista antes de qualquer script carregar
+      if (typeof globalThis === 'undefined') {
+        window.globalThis = window;
+      }
+    </script>
+    <script>
+      // Chakra UI v3 ColorMode initialization
+      (function() {
+        try {
+          var colorMode = localStorage.getItem('chakra-ui-color-mode') || 'light';
+          document.documentElement.setAttribute('data-theme', colorMode);
+          document.documentElement.style.colorScheme = colorMode;
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

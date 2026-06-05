@@ -1,0 +1,8 @@
+ao.katondo.display.app-pngs-0 /Users/ithustle/dev/web/katondo-queue/android/display/app/build/generated/res/pngs/release
+ao.katondo.display.app-updated_navigation_xml-1 /Users/ithustle/dev/web/katondo-queue/android/display/app/build/generated/updated_navigation_xml/release
+ao.katondo.display.app-packageReleaseResources-2 /Users/ithustle/dev/web/katondo-queue/android/display/app/build/intermediates/incremental/release/packageReleaseResources/merged.dir
+ao.katondo.display.app-packageReleaseResources-3 /Users/ithustle/dev/web/katondo-queue/android/display/app/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
+ao.katondo.display.app-release-4 /Users/ithustle/dev/web/katondo-queue/android/display/app/build/intermediates/merged_res/release/mergeReleaseResources
+ao.katondo.display.app-main-5 /Users/ithustle/dev/web/katondo-queue/android/display/app/src/main/res
+ao.katondo.display.app-release-6 /Users/ithustle/dev/web/katondo-queue/android/display/app/src/release/res
+gradleHome-0 /Users/ithustle/.gradle

@@ -1,0 +1,12 @@
+{
+  "schema": "./src/db/schema.ts",
+  "out": "./migrations",
+  "dialect": "mysql",
+  "dbCredentials": {
+    "host": "mysql",
+    "port": 3306,
+    "user": "root",
+    "password": "Katondo2024SecureDB",
+    "database": "katondo_queue"
+  }
+}

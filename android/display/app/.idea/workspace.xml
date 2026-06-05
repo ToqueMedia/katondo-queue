@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8bffb6dd-e224-4826-8876-8f898961254b" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../../../.env.example" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../.toquemedia-id" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../.toquemedia/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../.toquemedia/permissions.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../PLAN.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../TMS.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../TODO.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/public/favicon.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/public/logo-katondo.svg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/App.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/advertisements.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/areas.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/auth.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/client.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/dispensers.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/displays.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/indicators.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/services.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/stations.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/tickets.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/users.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/api/voice-config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/auth/first-login-modal.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/auth/login.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/auth/role-guard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/components/common/toast-container.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/components/layout/app-shell.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/hooks/useQueue.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/hooks/useSocket.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/main.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/admin/area-management.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/admin/dashboard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/admin/dispenser-management.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/admin/display-management.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/admin/indicators.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/admin/service-management.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/admin/station-management.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/admin/user-management.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/display/display-view.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/management/ad-management.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/management/dashboard.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/management/ticket-format-config.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/management/voice-config.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/reception/queue-panel.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/root/admin-management.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/pages/root/my-account.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/store/auth-store.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/store/notification-store.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/store/queue-store.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/theme/system.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/src/types/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../client/vite.config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../docker-compose.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/drizzle.config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/config/env.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/db/connection.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/db/schema.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/db/seed.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/middleware/auth.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/advertisements.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/areas.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/auth.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/dispenser-api.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/dispensers.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/displays.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/indicators.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/services.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/stations.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/tickets.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/users.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/routes/voice-config.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/ad.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/area.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/auth.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/daily-reset.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/dispenser.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/display.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/indicator.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/service.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/station.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/ticket.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/tts.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/user.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/services/voice-config.service.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/socket/handler.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/types/index.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/utils/date.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/utils/errors.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/utils/logger.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/src/utils/ticket-format.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../../../server/tsconfig.json" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../../.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 4,
+  "fromUser": false
+}]]></component>
+  <component name="ProjectId" id="3Eaey2N3pNZ2L8jWJJRexAOqO1G" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "android.gradle.sync.needed": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/ithustle/dev/web/katondo-queue/android/display/app"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8bffb6dd-e224-4826-8876-8f898961254b" name="Changes" comment="" />
+      <created>1780421358262</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1780421358262</updated>
+    </task>
+    <servers />
+  </component>
+</project>

@@ -1,0 +1,1 @@
+ALTER TABLE `voice_configs` ADD `call_sound_mode` varchar(20) DEFAULT 'chime' NOT NULL;

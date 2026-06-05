@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Ícone simplificado: letra K estilizada -->
+    <path
+        android:fillColor="#10b981"
+        android:pathData="M40,30 L40,78 L48,78 L48,58 L62,78 L72,78 L56,56 L72,30 L62,30 L48,52 L48,30 Z" />
+</vector>

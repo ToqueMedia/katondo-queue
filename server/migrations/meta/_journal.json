@@ -1,0 +1,48 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1780401164398,
+      "tag": "0000_exotic_husk",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1780475875754,
+      "tag": "0001_sparkling_tomorrow_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1780527371145,
+      "tag": "0002_lyrical_luckman",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1780527645444,
+      "tag": "0003_shallow_devos",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1780593707550,
+      "tag": "0004_useful_karen_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1780597424955,
+      "tag": "0005_careful_supernaut",
+      "breakpoints": true
+    }
+  ]
+}

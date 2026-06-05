@@ -1,0 +1,11 @@
+R_DEF: Internal format may change without notice
+local
+drawable ic_launcher_background
+drawable ic_launcher_foreground
+drawable logo_katondo
+mipmap ic_launcher
+raw beep
+raw queue_chime
+string app_name
+string server_url
+style Theme.KatondoDisplay
