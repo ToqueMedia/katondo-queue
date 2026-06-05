@@ -20,6 +20,7 @@ const updateSchema = z.object({
   name: z.string().min(1).optional(),
   areaId: z.number().int().optional(),
   active: z.boolean().optional(),
+  password: z.string().min(6).optional(),
 });
 
 router.use(authMiddleware);

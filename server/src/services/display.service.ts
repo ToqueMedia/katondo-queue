@@ -66,10 +66,27 @@ export async function getDisplayById(id: number) {
 
 export async function updateDisplay(
   id: number,
-  updates: { name?: string; areaId?: number; active?: boolean },
+  updates: { name?: string; areaId?: number; active?: boolean; password?: string },
 ) {
-  await getDisplayById(id);
-  await db.update(displayConfigs).set(updates).where(eq(displayConfigs.id, id));
+  const display = await getDisplayById(id);
+  const { password, ...directUpdates } = updates;
+
+  if (Object.keys(directUpdates).length > 0) {
+    await db.update(displayConfigs).set(directUpdates).where(eq(displayConfigs.id, id));
+  }
+
+  // Update associated user
+  const userUpdates: any = {};
+  if (updates.areaId !== undefined) {
+    userUpdates.areaId = updates.areaId;
+  }
+  if (password) {
+    userUpdates.passwordHash = await hashPassword(password);
+  }
+  if (Object.keys(userUpdates).length > 0) {
+    await db.update(users).set(userUpdates).where(eq(users.id, display.userId));
+  }
+
   logger.info('Display updated', { module: 'display', displayId: id });
   return getDisplayById(id);
 }

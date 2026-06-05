@@ -29,7 +29,7 @@ const updateSchema = z.object({
 
 router.use(authMiddleware);
 
-router.get('/', requireRole('admin', 'management', 'dispenser'), async (req, res) => {
+router.get('/', requireRole('root', 'admin', 'management', 'dispenser'), async (req, res) => {
   try {
     const areaId = req.query.areaId ? parseInt(String(req.query.areaId), 10) : undefined;
     const result = await serviceService.listServices(areaId);

@@ -65,10 +65,27 @@ export async function getDispenserById(id: number) {
 
 export async function updateDispenser(
   id: number,
-  updates: { name?: string; areaId?: number; active?: boolean },
+  updates: { name?: string; areaId?: number; active?: boolean; password?: string },
 ) {
-  await getDispenserById(id);
-  await db.update(dispenserConfigs).set(updates).where(eq(dispenserConfigs.id, id));
+  const dispenser = await getDispenserById(id);
+  const { password, ...directUpdates } = updates;
+
+  if (Object.keys(directUpdates).length > 0) {
+    await db.update(dispenserConfigs).set(directUpdates).where(eq(dispenserConfigs.id, id));
+  }
+
+  // Update associated user
+  const userUpdates: any = {};
+  if (updates.areaId !== undefined) {
+    userUpdates.areaId = updates.areaId;
+  }
+  if (password) {
+    userUpdates.passwordHash = await hashPassword(password);
+  }
+  if (Object.keys(userUpdates).length > 0) {
+    await db.update(users).set(userUpdates).where(eq(users.id, dispenser.userId));
+  }
+
   logger.info('Dispenser updated', { module: 'dispenser', dispenserId: id });
   return getDispenserById(id);
 }

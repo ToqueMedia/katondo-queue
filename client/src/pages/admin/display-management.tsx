@@ -15,6 +15,8 @@ export default function DisplayManagement() {
   const [areas, setAreas] = useState<AreaRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editing, setEditing] = useState<DisplayConfigRow | null>(null);
   const [form, setForm] = useState({ name: '', areaId: '', username: '', password: '' });
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<DisplayConfigRow | null>(null);
@@ -47,6 +49,31 @@ export default function DisplayManagement() {
       setCreateOpen(false); setForm({ name: '', areaId: '', username: '', password: '' }); loadData();
     } catch (err: any) {
       notify.addNotification({ type: 'error', title: err.response?.data?.error || 'Erro ao criar' });
+    } finally { setSaving(false); }
+  };
+
+  const openEdit = (d: DisplayConfigRow) => {
+    setEditing(d);
+    setForm({ name: d.name, areaId: String(d.areaId), username: '', password: '' });
+    setEditOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editing) return;
+    setSaving(true);
+    try {
+      const payload: any = {
+        name: form.name,
+        areaId: parseInt(form.areaId),
+      };
+      if (form.password) {
+        payload.password = form.password;
+      }
+      await updateDisplay(editing.id, payload);
+      notify.addNotification({ type: 'success', title: 'Display actualizado' });
+      setEditOpen(false); setEditing(null); loadData();
+    } catch (err: any) {
+      notify.addNotification({ type: 'error', title: err.response?.data?.error || 'Erro ao actualizar' });
     } finally { setSaving(false); }
   };
 
@@ -105,6 +132,7 @@ export default function DisplayManagement() {
                 <Table.Cell><Badge colorPalette={d.active ? 'green' : 'red'}>{d.active ? 'Activo' : 'Inactivo'}</Badge></Table.Cell>
                 <Table.Cell>
                   <Flex gap={1}>
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(d)}>Editar</Button>
                     <Button size="sm" variant="ghost" onClick={() => handleToggle(d)}>{d.active ? 'Desactivar' : 'Activar'}</Button>
                     <Button size="sm" variant="ghost" colorPalette="red" onClick={() => handleDeleteClick(d)}>Eliminar</Button>
                   </Flex>
@@ -132,7 +160,6 @@ export default function DisplayManagement() {
                       <NativeSelect.Root>
                         <NativeSelect.Field value={form.areaId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm(f => ({ ...f, areaId: e.target.value }))}>
                           <option value="">Seleccionar...</option>
-                          <option value="0">Todas as Áreas (Global)</option>
                           {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                         </NativeSelect.Field>
                       </NativeSelect.Root>
@@ -144,6 +171,40 @@ export default function DisplayManagement() {
                 <Dialog.Footer pt={3} borderTop="1px solid" borderColor="blackAlpha.100" display="flex" justifyContent="end" gap={3}>
                   <Button variant="ghost" size="sm" onClick={() => setCreateOpen(false)}>Cancelar</Button>
                   <Button colorPalette="teal" size="sm" loading={saving} onClick={handleCreate}>Criar</Button>
+                </Dialog.Footer>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        )}
+      </Dialog.Root>
+
+      <Dialog.Root open={editOpen} onOpenChange={(e: { open: boolean }) => setEditOpen(e.open)}>
+        {editOpen && (
+          <Portal>
+            <Dialog.Backdrop bg="blackAlpha.600" backdropFilter="blur(4px)" />
+            <Dialog.Positioner p={4} display="flex" alignItems="center" justifyContent="center">
+              <Dialog.Content bg="white" borderRadius="16px" boxShadow="lg" maxW="500px" w="100%" p={6}>
+                <Dialog.Header pb={3} borderBottom="1px solid" borderColor="blackAlpha.100">
+                  <Dialog.Title fontSize="lg" fontWeight="bold" color="brand.700">Editar Display</Dialog.Title>
+                </Dialog.Header>
+                <Dialog.Body py={4}>
+                  <VStack gap={4}>
+                    <Field.Root><Field.Label fontSize="sm" fontWeight="500" mb={1}>Nome</Field.Label><Input value={form.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, name: e.target.value }))} /></Field.Root>
+                    <Field.Root>
+                      <Field.Label fontSize="sm" fontWeight="500" mb={1}>Área</Field.Label>
+                      <NativeSelect.Root>
+                        <NativeSelect.Field value={form.areaId} onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setForm(f => ({ ...f, areaId: e.target.value }))}>
+                          <option value="">Seleccionar...</option>
+                          {areas.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                        </NativeSelect.Field>
+                      </NativeSelect.Root>
+                    </Field.Root>
+                    <Field.Root><Field.Label fontSize="sm" fontWeight="500" mb={1}>Nova Senha (opcional)</Field.Label><Input type="password" value={form.password} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Deixe em branco para manter a actual" /></Field.Root>
+                  </VStack>
+                </Dialog.Body>
+                <Dialog.Footer pt={3} borderTop="1px solid" borderColor="blackAlpha.100" display="flex" justifyContent="end" gap={3}>
+                  <Button variant="ghost" size="sm" onClick={() => { setEditOpen(false); setEditing(null); }}>Cancelar</Button>
+                  <Button colorPalette="teal" size="sm" loading={saving} onClick={handleUpdate}>Guardar</Button>
                 </Dialog.Footer>
               </Dialog.Content>
             </Dialog.Positioner>
