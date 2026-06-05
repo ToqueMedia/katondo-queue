@@ -1,6 +1,6 @@
 // Service service — CRUD + ticket format config + priority support
 
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { db } from '../db/connection.js';
 import { services } from '../db/schema.js';
 import { NotFoundError, ConflictError, ValidationError } from '../utils/errors.js';
@@ -45,7 +45,10 @@ export async function createService(
 }
 
 export async function listServices(areaId?: number) {
-  const conditions = areaId ? eq(services.areaId, areaId) : undefined;
+  // areaId=0 means "global" — return services specific to this area PLUS all global ones
+  const conditions = areaId
+    ? or(eq(services.areaId, areaId), eq(services.areaId, 0))
+    : undefined;
   return db.query.services.findMany({
     where: conditions,
     orderBy: (services, { asc }) => [asc(services.name)],
