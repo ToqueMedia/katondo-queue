@@ -12,6 +12,7 @@ const router = Router();
 const loginSchema = z.object({
   username: z.string().min(1, 'Username is required'),
   password: z.string().min(1, 'Password is required'),
+  browserStationId: z.number().int().nullable().optional(),
 });
 
 const refreshSchema = z.object({
@@ -21,8 +22,8 @@ const refreshSchema = z.object({
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = loginSchema.parse(req.body);
-    const result = await authService.login(username, password);
+    const { username, password, browserStationId } = loginSchema.parse(req.body);
+    const result = await authService.login(username, password, browserStationId);
     res.json(result);
   } catch (error) {
     if (error instanceof z.ZodError) {

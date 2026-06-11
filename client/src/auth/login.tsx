@@ -9,96 +9,106 @@ const styles = `
   .login-container {
     min-height: 100vh;
     width: 100%;
-    background-color: #FAFAF9;
+    background-color: #F6F8FB;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: 24px;
     position: relative;
-  }
-
-  .login-bg-pattern {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    opacity: 0.4;
-    pointer-events: none;
-    background-image: radial-gradient(circle at 20% 80%, rgba(21,101,192,0.06) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(5,150,105,0.06) 0%, transparent 50%);
   }
 
   .login-wrapper {
-    max-width: 420px;
+    max-width: 960px;
     width: 100%;
     position: relative;
     z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
+    display: grid;
+    grid-template-columns: minmax(300px, 0.92fr) minmax(340px, 1fr);
+    min-height: 560px;
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(10, 25, 47, 0.12);
   }
 
-  .login-logo {
+  .login-brand {
+    background-color: #1565C0;
+    color: white;
+    padding: 40px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    align-items: center;
+    justify-content: space-between;
+    min-height: 100%;
   }
 
-  .login-logo-icon {
-    width: 56px;
-    height: 56px;
-    background-color: #059669;
-    border-radius: 14px;
+  .login-brand-logo {
+    width: 100%;
+    max-width: 260px;
+    padding: 18px 20px;
+    border-radius: 8px;
+    background: rgba(10, 25, 47, 0.18);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 16px rgba(5,150,105,0.30);
   }
 
-  .login-logo-icon-text {
-    font-size: 24px;
-    font-weight: bold;
-    color: white;
+  .login-brand-logo img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
   }
 
-  .login-logo-title {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 24px;
-    font-weight: 400;
-    color: #1565C0;
-    line-height: 1.2;
-    text-align: center;
+  .login-brand-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 56px;
   }
 
-  .login-logo-subtitle {
-    font-size: 11px;
-    color: #78716C;
-    letter-spacing: 0.12em;
-    font-weight: 500;
-    text-align: center;
+  .login-brand-title {
+    font-size: 30px;
+    line-height: 1.12;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  .login-brand-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.78);
+    max-width: 330px;
+  }
+
+  .login-brand-meta {
+    display: grid;
+    gap: 8px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .login-panel {
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .login-card {
     width: 100%;
-    padding: 32px;
-    border-radius: 20px;
-    background-color: white;
-    box-shadow: 0 1px 3px rgba(10,25,47,0.06), 0 8px 24px rgba(10,25,47,0.06);
-    border: 1px solid rgba(0,0,0,0.05);
   }
 
   .login-card-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #1C1917;
-    margin-bottom: 4px;
+    font-size: 26px;
+    font-weight: 700;
+    color: #0A192F;
+    margin-bottom: 6px;
   }
 
   .login-card-subtitle {
     font-size: 14px;
-    color: #78716C;
-    margin-bottom: 24px;
+    color: #64748B;
+    margin-bottom: 28px;
   }
 
   .login-form {
@@ -114,15 +124,15 @@ const styles = `
   }
 
   .login-label {
-    font-size: 14px;
-    font-weight: 500;
-    color: #1C1917;
+    font-size: 13px;
+    font-weight: 650;
+    color: #334155;
   }
 
   .login-input {
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid rgba(0,0,0,0.05);
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #D8DEE7;
     font-size: 16px;
     width: 100%;
     box-sizing: border-box;
@@ -140,7 +150,7 @@ const styles = `
   .login-error {
     background-color: #FEF2F2;
     border: 1px solid #FECACA;
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 12px 16px;
   }
 
@@ -153,8 +163,8 @@ const styles = `
   .login-submit {
     background-color: #1565C0;
     color: white;
-    padding: 12px 16px;
-    border-radius: 10px;
+    padding: 13px 16px;
+    border-radius: 8px;
     font-size: 16px;
     font-weight: 600;
     border: none;
@@ -162,6 +172,13 @@ const styles = `
     width: 100%;
     -webkit-appearance: none;
     appearance: none;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 8px 18px rgba(21, 101, 192, 0.22);
+  }
+
+  .login-submit:hover:not(:disabled) {
+    background-color: #0F559F;
+    transform: translateY(-1px);
   }
 
   .login-submit:disabled {
@@ -169,17 +186,34 @@ const styles = `
     cursor: not-allowed;
   }
 
-  .login-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    align-items: center;
-  }
+  @media (max-width: 760px) {
+    .login-container {
+      padding: 12px;
+      align-items: stretch;
+    }
 
-  .login-footer-text {
-    font-size: 12px;
-    color: #A8A29E;
-    text-align: center;
+    .login-wrapper {
+      grid-template-columns: 1fr;
+      min-height: auto;
+    }
+
+    .login-brand {
+      min-height: auto;
+      padding: 24px;
+      gap: 24px;
+    }
+
+    .login-brand-copy {
+      margin-top: 20px;
+    }
+
+    .login-brand-title {
+      font-size: 24px;
+    }
+
+    .login-panel {
+      padding: 28px 22px;
+    }
   }
 `;
 
@@ -200,7 +234,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await apiLogin(username, password);
+      const storedStationId = localStorage.getItem('katondo_browser_station_id');
+      const browserStationId = storedStationId ? parseInt(storedStationId) : null;
+
+      const data = await apiLogin(username, password, browserStationId);
       authStore.login(data.user, data.token, data.refreshToken);
 
       if ((data.user as any).firstLogin) {
@@ -226,76 +263,77 @@ export default function LoginPage() {
 
   return (
     <div className="login-container">
-      <div className="login-bg-pattern" />
       <style>{styles}</style>
       <div className="login-wrapper">
-        {/* Logo */}
-        <div className="login-logo">
-          <img
-            src="/logo-katondo.png"
-            alt="Clínica Katondo Logo"
-            style={{ height: '70px', objectFit: 'contain' }}
-          />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, alignItems: 'center' }}>
-            <div className="login-logo-subtitle" style={{ fontSize: '11px', marginTop: '4px' }}>GESTÃO DE FILAS</div>
-          </div>
-        </div>
-
-        {/* Login Card */}
-        <div className="login-card">
-          <div className="login-card-title">Iniciar Sessão</div>
-          <div className="login-card-subtitle">Introduza as suas credenciais para aceder ao sistema</div>
-
-          <form className="login-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
-            <div className="login-field">
-              <label className="login-label" htmlFor="username">Utilizador</label>
-              <input
-                id="username"
-                className="login-input"
-                type="text"
-                value={username}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-                placeholder="nome.utilizador"
-                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                autoComplete="username"
-              />
+        <aside className="login-brand">
+          <div>
+            <div className="login-brand-logo">
+              <img src="/logo-katondo.png" alt="Clínica Katondo" />
             </div>
-
-            <div className="login-field">
-              <label className="login-label" htmlFor="password">Senha</label>
-              <input
-                id="password"
-                className="login-input"
-                type="password"
-                value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                autoComplete="current-password"
-              />
-            </div>
-
-            {error && (
-              <div className="login-error">
-                <div className="login-error-text">{error}</div>
+            <div className="login-brand-copy">
+              <div className="login-brand-title">Gestão de Filas</div>
+              <div className="login-brand-text">
+                Painel operacional para recepção, administração, displays e dispensadores.
               </div>
-            )}
+            </div>
+          </div>
+          <div className="login-brand-meta">
+            <div>Clínica General Katondo</div>
+            <div>Talatona, Luanda</div>
+            <div>Atendimento 24h | +244 923 168 644</div>
+          </div>
+        </aside>
 
-            <button
-              type="submit"
-              className="login-submit"
-              disabled={loading}
-            >
-              {loading ? 'A entrar...' : 'Entrar'}
-            </button>
-          </form>
-        </div>
+        <main className="login-panel">
+          <div className="login-card">
+            <div className="login-card-title">Iniciar Sessão</div>
+            <div className="login-card-subtitle">Introduza as suas credenciais para aceder ao sistema.</div>
 
-        {/* Footer */}
-        <div className="login-footer">
-          <div className="login-footer-text">Clínica General Katondo — Talatona, Luanda</div>
-          <div className="login-footer-text">Atendimento 24h | +244 923 168 644</div>
-        </div>
+            <form className="login-form" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
+              <div className="login-field">
+                <label className="login-label" htmlFor="username">Utilizador</label>
+                <input
+                  id="username"
+                  className="login-input"
+                  type="text"
+                  value={username}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+                  placeholder="nome.utilizador"
+                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                  autoComplete="username"
+                />
+              </div>
+
+              <div className="login-field">
+                <label className="login-label" htmlFor="password">Senha</label>
+                <input
+                  id="password"
+                  className="login-input"
+                  type="password"
+                  value={password}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                  autoComplete="current-password"
+                />
+              </div>
+
+              {error && (
+                <div className="login-error">
+                  <div className="login-error-text">{error}</div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="login-submit"
+                disabled={loading}
+              >
+                {loading ? 'A entrar...' : 'Entrar'}
+              </button>
+            </form>
+          </div>
+        </main>
       </div>
     </div>
   );

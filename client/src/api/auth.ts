@@ -8,10 +8,11 @@ export interface ChangePasswordPayload {
   newPassword: string;
 }
 
-export async function login(username: string, password: string): Promise<AuthResponse> {
+export async function login(username: string, password: string, browserStationId?: number | null): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>('/auth/login', {
     username,
     password,
+    browserStationId,
   });
   return data;
 }

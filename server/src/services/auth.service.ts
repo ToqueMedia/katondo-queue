@@ -13,7 +13,7 @@ import type { StringValue } from 'ms';
 
 const SALT_ROUNDS = 12;
 
-export async function login(username: string, password: string): Promise<AuthResponse> {
+export async function login(username: string, password: string, browserStationId?: number | null): Promise<AuthResponse> {
   const user = await db.query.users.findFirst({
     where: eq(users.username, username),
   });
@@ -25,6 +25,14 @@ export async function login(username: string, password: string): Promise<AuthRes
   const passwordValid = await bcrypt.compare(password, user.passwordHash);
   if (!passwordValid) {
     throw new UnauthorizedError('Invalid credentials');
+  }
+
+  if (user.role === 'reception' && user.stationId !== null && user.stationId !== undefined && user.stationId !== 0) {
+    if (browserStationId !== user.stationId) {
+      throw new ValidationError(
+        'Já possui uma estação activa noutro dispositivo. Volte à estação anterior para trocar a estação e terminar a sessão, ou solicite a um administrador para libertar a sua estação.'
+      );
+    }
   }
 
   const payload: JwtPayload = {
@@ -92,6 +100,24 @@ export async function refreshToken(oldRefreshToken: string): Promise<{ token: st
   }
 }
 
+export async function generateTokens(user: any): Promise<{ token: string; refreshToken: string }> {
+  const payload: JwtPayload = {
+    userId: user.id,
+    role: user.role as UserRole,
+    areaId: user.areaId ?? null,
+    stationId: user.stationId ?? null,
+  };
+
+  const tokenExpiry = (user.role === 'display' || user.role === 'dispenser')
+    ? '3650d' as StringValue
+    : env.jwtExpiresIn as StringValue;
+
+  const token = jwt.sign(payload, env.jwtSecret, { expiresIn: tokenExpiry });
+  const refreshToken = jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtRefreshExpiresIn as StringValue });
+
+  return { token, refreshToken };
+}
+
 export async function hashPassword(password: string): Promise<string> {
   if (password.length < 6) {
     throw new ValidationError('Password must be at least 6 characters');
@@ -101,6 +127,16 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   return bcrypt.compare(password, hash);
+}
+
+export async function verifyUserPassword(userId: number, password: string): Promise<boolean> {
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, userId),
+  });
+
+  if (!user) return false;
+
+  return verifyPassword(password, user.passwordHash);
 }
 
 export function isDefaultRootPassword(passwordHash: string): Promise<boolean> {

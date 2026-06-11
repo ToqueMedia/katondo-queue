@@ -177,6 +177,15 @@ App Android nativo mínimo (`android/display/`) que carrega o display web num We
   3. Ajustado o `target` no `tsconfig.json` de `ES2020` para `ES2018` para garantir que o compilador TypeScript não emita sintaxe excessivamente moderna antes do processamento do Vite.
   4. O build agora gera arquivos `-legacy.js` com polyfills automáticos que são carregados condicionalmente apenas em navegadores que não suportam ES Modules nativos.
 
+### Restrição de Acesso a Estações de Recepção (Junho 2026)
+- **Problema**: Operadores de recepção que terminavam a sessão direta (Logout) sem clicar em "Trocar Estação" mantinham a estação ocupada na base de dados. No próximo acesso, podiam tentar fazer login a partir de um dispositivo físico diferente e selecionar um novo posto, gerando conflitos e deixando a estação anterior bloqueada.
+- **Solução**:
+  1. No frontend, ao selecionar e confirmar a estação ativa, salvamos o ID da estação no `localStorage` sob a chave `katondo_browser_station_id`.
+  2. Ao clicar em "Trocar Estação", limpamos este ID do `localStorage` e liberamos o posto na base de dados.
+  3. No fluxo de Login, enviamos o `browserStationId` (se existir) para o backend.
+  4. O backend valida: se o utilizador for de recepção e possuir uma estação ativa gravada na base de dados, o `browserStationId` enviado no login deve coincidir com o ID gravado na BD. Caso contrário, o login é recusado com uma mensagem clara obrigando o utilizador a liberar o posto anterior.
+- **Impacto**: Garante que o operador não consiga fazer login noutra estação sem antes liberar formalmente o posto anterior (na máquina onde o posto foi ocupado), prevenindo conflitos de sessões e inconsistência física de postos.
+
 ## File Locations
 
 ```
