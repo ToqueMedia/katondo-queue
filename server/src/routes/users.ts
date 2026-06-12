@@ -2,6 +2,7 @@
 
 import { Router } from 'express';
 import { z } from 'zod';
+import { io } from '../index.js';
 import * as userService from '../services/user.service.js';
 import * as authService from '../services/auth.service.js';
 import * as stationService from '../services/station.service.js';
@@ -243,6 +244,9 @@ router.post('/:id/release-station', requireRole('root', 'admin'), async (req, re
     }
 
     const result = await userService.setActiveStation(id, null, null);
+
+    // Emitir evento Socket.IO global para informar o frontend da liberação em tempo real
+    io.emit('user:released', { userId: id });
 
     res.json({
       message: 'Estação libertada com sucesso e sessão encerrada.',

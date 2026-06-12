@@ -187,13 +187,14 @@ App Android nativo mínimo (`android/display/`) que carrega o display web num We
 - **Impacto**: Garante que o operador não consiga fazer login noutra estação sem antes liberar formalmente o posto anterior (na máquina onde o posto foi ocupado), prevenindo conflitos de sessões e inconsistência física de postos.
 
 ### Forçar Libertação de Postos por Administradores (Junho 2026)
-- **Problema**: Em casos onde o navegador era limpo, o dispositivo danificava, ou ocorriam falhas de rede antes do logout do operador de recepção, o posto ficava bloqueado na base de dados. O operador não conseguia fazer login em nenhum outro dispositivo e dependia de intervenção manual direta na base de dados para resolver.
+- **Problema**: Em casos onde o navegador era limpo, o dispositivo danificava, ou ocorriam falhas de rede antes do logout do operador de recepção, o posto ficava bloqueado na base de dados. O operador não conseguia fazer login em nenhum outro dispositivo e dependia de intervenção manual direta na base de dados para resolver. Além disso, se a sessão fosse desvinculada na base de dados pelo administrador, o operador afetado ficaria num estado inconsistente ("efeito limbo") no browser sem saber do encerramento da sua sessão de posto.
 - **Solução**:
   1. Implementado um novo endpoint de backend: `POST /api/users/:id/release-station`, restrito aos perfis `root` e `admin`.
-  2. Este endpoint limpa a associação do utilizador alvo em qualquer estação na base de dados (coluna `receptionUserId` em `stations`) e define as propriedades `stationId` e `areaId` do utilizador na tabela `users` como `null`.
+  2. Este endpoint limpa a associação do utilizador alvo em qualquer estação na base de dados (coluna `receptionUserId` em `stations`), define as propriedades `stationId` e `areaId` do utilizador na tabela `users` como `null` e **emite um evento Socket.IO global (`user:released`) com o ID do utilizador**.
   3. No frontend, adicionado um botão de acção "Libertar" na lista de utilizadores da área de administração (`/admin/users`) para cada utilizador de recepção que tenha uma estação ativa vinculada.
   4. Adicionado um diálogo de confirmação seguro que avisa o administrador antes de proceder com o término forçado da sessão e libertação do posto.
-- **Impacto**: Permite que os administradores da clínica resolvam instantaneamente bloqueios de sessão de forma visual e segura sem requerer suporte técnico especializado ou intervenção directa na base de dados, reduzindo o tempo de inatividade da recepção em caso de imprevistos físicos ou de rede.
+  5. **Sincronização em Tempo Real (WebSockets)**: O hook `useSocket` escuta o evento `'user:released'`. Se o ID do utilizador desvinculado coincidir com o do utilizador atual, dispara um `CustomEvent` `'auth:station-released'`. O painel de fila de recepção escuta este evento, apresenta uma notificação toast de aviso e redefine o estado local (`authStore.updateUserActiveStation(0, 0)`), redirecionando o operador de imediato e de forma suave ao ecrã de seleção de posto.
+- **Impacto**: Permite que os administradores da clínica resolvam instantaneamente bloqueios de sessão de forma visual e segura sem requerer suporte técnico especializado ou intervenção directa na base de dados, reduzindo o tempo de inatividade da recepção em caso de imprevistos físicos ou de rede. Adicionalmente, garante uma transição fluida, segura e livre de inconsistências de ecrã para os operadores de atendimento na recepção em tempo real.
 
 ## File Locations
 

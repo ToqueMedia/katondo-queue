@@ -61,6 +61,15 @@ export function useSocket(areaId: number | null) {
       console.error('[Socket] Connection error:', err.message);
     });
 
+    s.on('user:released', (payload: { userId: number }) => {
+      const userJson = localStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : null;
+      if (user && user.id === payload.userId) {
+        console.log('[Socket] Active station released by an administrator');
+        window.dispatchEvent(new CustomEvent('auth:station-released', { detail: payload }));
+      }
+    });
+
     s.on('ticket:created', async (payload) => {
       const userJson = localStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : null;

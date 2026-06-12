@@ -151,6 +151,25 @@ export default function ReceptionQueue() {
     return () => window.removeEventListener('auth:expired', handleAuthExpired);
   }, [authStore, navigate]);
 
+  // Listen for administrator forcing release of this station
+  useEffect(() => {
+    const handleStationReleased = () => {
+      notify.addNotification({
+        type: 'warning',
+        title: 'Estação libertada',
+        description: 'Um administrador libertou o seu posto de atendimento. Por favor, selecione novamente.',
+      });
+      // Limpar posto localmente para redirecionar à seleção de posto
+      authStore.updateUserActiveStation(0, 0);
+      localStorage.removeItem('katondo_browser_station_id');
+      queueStore.setCurrentTicket(null);
+      queueStore.setNextTickets([]);
+      queueStore.setWaitingCount(0);
+    };
+    window.addEventListener('auth:station-released', handleStationReleased);
+    return () => window.removeEventListener('auth:station-released', handleStationReleased);
+  }, [authStore, queueStore, notify]);
+
   // Prevenir fecho da aba (browser) com ticket em andamento
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
