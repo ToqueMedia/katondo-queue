@@ -44,7 +44,7 @@ const chimeFileFilter = (_req: any, file: any, cb: any) => {
 export const uploadMiddleware = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 200 * 1024 * 1024 }, // Aumentado para 200MB para suportar vídeos maiores
+  limits: { fileSize: 100 * 1024 * 1024 }, // Limitado para 100MB para suportar vídeos maiores
 });
 
 export const chimeUploadMiddleware = multer({

@@ -1,7 +1,7 @@
 // Admin — Dashboard Overview with real-time station delegation & traffic monitoring
 
 import { useState, useEffect } from 'react';
-import { Heading, Text, SimpleGrid, Card, VStack, Badge, Flex, Box, Button, HStack, Portal } from '@chakra-ui/react';
+import { Heading, Text, SimpleGrid, Card, VStack, Badge, Flex, Box, Button, HStack, Portal, Alert } from '@chakra-ui/react';
 import { Dialog } from '@chakra-ui/react';
 import { getTodayIndicators, getTodayIndicatorsByService } from '../../api/indicators';
 import { listAreas } from '../../api/areas';
@@ -9,10 +9,14 @@ import { listStations, updateStation } from '../../api/stations';
 import { listServices } from '../../api/services';
 import { listUsers } from '../../api/users';
 import { listTickets } from '../../api/tickets';
+import { getBackupStatus } from '../../api/backup';
 import { useSocket } from '../../hooks/useSocket';
 import { useNotificationStore } from '../../store/notification-store';
+import { AdminPageHeader } from '../../components/admin/admin-page';
+import { formatDurationFromMinutes } from '../../utils/time-format';
 import type { TodayIndicators, ServiceIndicators } from '../../api/indicators';
 import type { AreaRow, StationRow, ServiceRow, UserRow, TicketRow } from '../../types';
+import type { BackupStatusResponse } from '../../api/backup';
 
 export default function AdminDashboard() {
   const [areas, setAreas] = useState<AreaRow[]>([]);
@@ -25,6 +29,9 @@ export default function AdminDashboard() {
   const [receptionists, setReceptionists] = useState<UserRow[]>([]);
   const [waitingTickets, setWaitingTickets] = useState<TicketRow[]>([]);
   const [activeTickets, setActiveTickets] = useState<TicketRow[]>([]);
+
+  // Backup status state
+  const [backupStatus, setBackupStatus] = useState<BackupStatusResponse | null>(null);
 
   // States for ALL areas (real-time cross-area traffic summary)
   const [allWaitingTickets, setAllWaitingTickets] = useState<TicketRow[]>([]);
@@ -43,20 +50,21 @@ export default function AdminDashboard() {
   // Initialize socket connection for real-time updates based on selected Area
   const socket = useSocket(selectedAreaId);
 
-  // Load all areas on mount
+  // Load all areas and backup status on mount
   useEffect(() => {
-    const fetchAreas = async () => {
+    const fetchInitialData = async () => {
       try {
-        const list = await listAreas();
+        const [list, bStatus] = await Promise.all([listAreas(), getBackupStatus()]);
         setAreas(list);
+        setBackupStatus(bStatus);
         if (list.length > 0) {
           setSelectedAreaId(list[0].id); // Default to first area
         }
       } catch {
-        notify.addNotification({ type: 'error', title: 'Erro ao carregar áreas' });
+        notify.addNotification({ type: 'error', title: 'Erro ao carregar dados iniciais' });
       }
     };
-    fetchAreas();
+    fetchInitialData();
   }, []);
 
   // Fetch all real-time dashboard data
@@ -176,24 +184,18 @@ export default function AdminDashboard() {
   const statCards = [
     { label: 'Senhas Emitidas', value: indicators?.issued ?? 0, color: '#1565C0', icon: '🎫', bg: '#EFF6FF' },
     { label: 'Senhas Atendidas', value: indicators?.served ?? 0, color: '#059669', icon: '✓', bg: '#ECFDF5' },
-    { label: 'Espera Média', value: `${indicators?.avgWaitMin ?? 0} min`, color: '#D97706', icon: '⏱', bg: '#FFFBEB' },
-    { label: 'Atend. Médio', value: `${indicators?.avgServiceMin ?? 0} min`, color: '#7C3AED', icon: '⚡', bg: '#F5F3FF' },
+    { label: 'Espera Média', value: formatDurationFromMinutes(indicators?.avgWaitMin), color: '#D97706', icon: '⏱', bg: '#FFFBEB' },
+    { label: 'Atend. Médio', value: formatDurationFromMinutes(indicators?.avgServiceMin), color: '#7C3AED', icon: '⚡', bg: '#F5F3FF' },
   ];
 
   return (
     <VStack gap={8} align="stretch">
       {/* Header and Area Selector */}
-      <Flex justify="space-between" align={{ base: 'start', md: 'center' }} direction={{ base: 'column', md: 'row' }} gap={4}>
-        <VStack gap={1} align="start">
-          <Heading size="lg" fontFamily="heading" fontWeight="400" color="brand.700">
-            Painel de Monitorização em Tempo Real
-          </Heading>
-          <Text color="ink.muted" fontSize="sm">
-            Visualização dinâmica e atribuição de serviços às estações de atendimento.
-          </Text>
-        </VStack>
-
-        <Flex align="center" gap={3}>
+      <AdminPageHeader
+        title="Painel de Monitorização"
+        description="Visualização dinâmica e atribuição de serviços às estações de atendimento."
+        action={
+        <Flex align="center" gap={3} bg="white" p={2} borderRadius="10px" border="1px solid" borderColor="blackAlpha.100" shadow="sm">
           <Text fontSize="sm" fontWeight="600" color="brand.700">Área Activa:</Text>
           <select
             value={selectedAreaId || ''}
@@ -216,7 +218,21 @@ export default function AdminDashboard() {
             ))}
           </select>
         </Flex>
-      </Flex>
+        }
+      />
+
+      {backupStatus?.isOverdue && (
+        <Alert.Root status="warning" variant="subtle" borderRadius="12px">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title fontSize="sm" fontWeight="bold">Backup Obrigatório em Atraso!</Alert.Title>
+            <Alert.Description fontSize="xs">
+              Já se passaram <strong>{backupStatus.daysSinceLastBackup} dias</strong> desde o último backup de segurança.
+              Por favor, vá à secção de <a href="/admin/backup" style={{ fontWeight: 'bold', textDecoration: 'underline', color: 'inherit' }}>Backup de Dados</a> para exportar e salvaguardar a base de dados localmente.
+            </Alert.Description>
+          </Alert.Content>
+        </Alert.Root>
+      )}
 
       {loading ? (
         <SimpleGrid columns={4} gap={4}>
@@ -395,7 +411,7 @@ export default function AdminDashboard() {
 
                             <VStack align="center" gap={0} minW="55px">
                               <Text fontSize="10px" color="ink.faint" textTransform="uppercase">Espera</Text>
-                              <Text fontWeight="600" color="brand.600" fontSize="sm">{svc.avgWaitMin}m</Text>
+                              <Text fontWeight="600" color="brand.600" fontSize="sm">{formatDurationFromMinutes(svc.avgWaitMin)}</Text>
                             </VStack>
                           </Flex>
                         </Flex>
@@ -421,7 +437,7 @@ export default function AdminDashboard() {
                     <Heading size="md" fontWeight="600" color="ink.DEFAULT">
                       Monitorização de Estações (Tempo Real)
                     </Heading>
-                    <Text fontSize="xs" color="ink.muted">Estado dos guichês e atribuição imediata de especialidades.</Text>
+                    <Text fontSize="xs" color="ink.muted">Estado das recepções e atribuição imediata de especialidades.</Text>
                   </VStack>
                   <Badge colorPalette="brand" variant="solid" px={3} py={1} borderRadius="8px">
                     Ativas
@@ -431,7 +447,7 @@ export default function AdminDashboard() {
                 {stations.length === 0 ? (
                   <VStack py={12} align="center" gap={3}>
                     <Text fontSize="3xl" opacity={0.3}>🖥</Text>
-                    <Text color="ink.muted" fontSize="sm">Nenhum guichê ou estação cadastrada nesta área.</Text>
+                    <Text color="ink.muted" fontSize="sm">Nenhuma recepção ou estação cadastrada nesta área.</Text>
                   </VStack>
                 ) : (
                   <VStack gap={4} align="stretch">
@@ -525,7 +541,7 @@ export default function AdminDashboard() {
                     Delegar Serviços — {delegatingStation.name}
                   </Dialog.Title>
                   <Text fontSize="xs" color="ink.muted" mt={1}>
-                    Selecione quais serviços este guichê pode atender. Mudanças refletem imediatamente no painel de chamada e nas recepções.
+                    Selecione quais serviços esta recepção pode atender. Mudanças refletem imediatamente no painel de chamada e nas recepções.
                   </Text>
                 </Dialog.Header>
 

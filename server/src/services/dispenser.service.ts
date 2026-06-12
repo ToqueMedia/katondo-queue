@@ -1,6 +1,6 @@
 // Dispenser service — CRUD + create dispenser user
 
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db/connection.js';
 import { dispenserConfigs, users } from '../db/schema.js';
 import { hashPassword } from './auth.service.js';
@@ -46,9 +46,23 @@ export async function createDispenser(name: string, areaId: number, username: st
 }
 
 export async function listDispensers() {
-  return db.query.dispenserConfigs.findMany({
+  const configs = await db.query.dispenserConfigs.findMany({
     orderBy: (dispenserConfigs, { asc }) => [asc(dispenserConfigs.name)],
   });
+
+  const userIds = Array.from(new Set(configs.map((c) => c.userId)));
+  let userMap = new Map<number, string>();
+  if (userIds.length > 0) {
+    const relatedUsers = await db.query.users.findMany({
+      where: inArray(users.id, userIds),
+    });
+    userMap = new Map(relatedUsers.map((u) => [u.id, u.username]));
+  }
+
+  return configs.map((c) => ({
+    ...c,
+    username: userMap.get(c.userId) || '—',
+  }));
 }
 
 export async function getDispenserById(id: number) {
@@ -60,7 +74,14 @@ export async function getDispenserById(id: number) {
     throw new NotFoundError(`Dispenser with id ${id} not found`);
   }
 
-  return dispenser;
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, dispenser.userId),
+  });
+
+  return {
+    ...dispenser,
+    username: user?.username || '—',
+  };
 }
 
 export async function updateDispenser(

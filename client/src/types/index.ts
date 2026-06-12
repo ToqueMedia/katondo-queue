@@ -8,6 +8,7 @@ export type AdContentType = 'image' | 'video' | 'text' | 'html';
 export interface UserRow {
   id: number;
   username: string;
+  name: string | null;
   role: UserRole;
   areaId: number | null;
   stationId: number | null;
@@ -59,6 +60,7 @@ export interface StationRow {
 export interface DisplayConfigRow {
   id: number;
   name: string;
+  username: string;
   areaId: number;
   userId: number;
   active: boolean;
@@ -68,6 +70,7 @@ export interface DisplayConfigRow {
 export interface DispenserConfigRow {
   id: number;
   name: string;
+  username: string;
   areaId: number;
   userId: number;
   active: boolean;

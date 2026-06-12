@@ -1,13 +1,14 @@
 // Admin — Service Management page with Priority toggle
 
 import { useState, useEffect } from 'react';
-import { Heading, Text, VStack, Button, Badge, Flex, Dialog, Portal } from '@chakra-ui/react';
+import { Text, VStack, Button, Badge, Flex, Dialog, Portal } from '@chakra-ui/react';
 import { Table } from '@chakra-ui/react';
 import { Field, Input } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
 import { listServices, createService, updateService, deleteService } from '../../api/services';
 import { listAreas } from '../../api/areas';
 import { useNotificationStore } from '../../store/notification-store';
+import { AdminPageHeader, AdminTableCard } from '../../components/admin/admin-page';
 import type { ServiceRow, AreaRow, TicketFormat } from '../../types';
 
 const FORMATS: { value: TicketFormat; label: string }[] = [
@@ -101,22 +102,24 @@ export default function ServiceManagement() {
 
   return (
     <VStack gap={6} align="stretch">
-      <Flex justify="space-between" align="center">
-        <Heading size="lg">Serviços</Heading>
-        <Button colorPalette="teal" onClick={() => { setForm({ name: '', areaId: '', ticketFormat: 'numeric', ticketPrefix: '', ticketDigitCount: '3', isPriority: false }); setCreateOpen(true); }}>+ Serviço</Button>
-      </Flex>
+      <AdminPageHeader
+        title="Serviços"
+        description="Configure serviços, formatos de senha, prioridade e disponibilidade por área."
+        action={<Button colorPalette="teal" onClick={() => { setForm({ name: '', areaId: '', ticketFormat: 'numeric', ticketPrefix: '', ticketDigitCount: '3', isPriority: false }); setCreateOpen(true); }}>+ Serviço</Button>}
+      />
 
       {loading ? <Text>Carregando...</Text> : services.length === 0 ? (
         <Text color="gray.500">Nenhum serviço — clique + para adicionar.</Text>
       ) : (
+        <AdminTableCard>
         <Table.Root>
           <Table.Header>
-            <Table.Row>
+            <Table.Row bg="gray.50">
               <Table.ColumnHeader>Nome</Table.ColumnHeader>
               <Table.ColumnHeader>Área</Table.ColumnHeader>
               <Table.ColumnHeader>Formato</Table.ColumnHeader>
               <Table.ColumnHeader>Estado</Table.ColumnHeader>
-              <Table.ColumnHeader>Acções</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="right">Acções</Table.ColumnHeader>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -134,7 +137,7 @@ export default function ServiceManagement() {
                 <Table.Cell>{s.ticketFormat} {s.ticketPrefix ? `(${s.ticketPrefix})` : ''}</Table.Cell>
                 <Table.Cell><Badge colorPalette={s.active ? 'green' : 'red'}>{s.active ? 'Activo' : 'Inactivo'}</Badge></Table.Cell>
                 <Table.Cell>
-                  <Flex gap={1}>
+                  <Flex gap={1} justify="flex-end" wrap="wrap">
                     <Button size="sm" variant="ghost" onClick={() => openEdit(s)}>Editar</Button>
                     <Button size="sm" variant="ghost" onClick={() => handleToggle(s)}>{s.active ? 'Desactivar' : 'Activar'}</Button>
                     <Button size="sm" variant="ghost" colorPalette="red" onClick={() => handleDeleteClick(s)}>Eliminar</Button>
@@ -144,6 +147,7 @@ export default function ServiceManagement() {
             ))}
           </Table.Body>
         </Table.Root>
+        </AdminTableCard>
       )}
 
       <Dialog.Root open={createOpen} onOpenChange={(e: { open: boolean }) => setCreateOpen(e.open)}>

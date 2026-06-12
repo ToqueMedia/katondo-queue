@@ -29,6 +29,10 @@ export async function completeService(ticketId: number): Promise<void> {
   await apiClient.patch(`/tickets/${ticketId}/complete`);
 }
 
+export async function deleteTicket(ticketId: number): Promise<void> {
+  await apiClient.delete(`/tickets/${ticketId}`);
+}
+
 export async function cancelTicket(ticketId: number): Promise<void> {
   await apiClient.patch(`/tickets/${ticketId}/cancel`);
 }

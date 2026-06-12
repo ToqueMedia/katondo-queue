@@ -1,13 +1,14 @@
 // Admin — Dispenser Management page
 
 import { useState, useEffect } from 'react';
-import { Heading, Text, VStack, Button, Badge, Flex, Dialog, Portal } from '@chakra-ui/react';
+import { Text, VStack, Button, Badge, Flex, Dialog, Portal } from '@chakra-ui/react';
 import { Table } from '@chakra-ui/react';
 import { Field, Input } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
 import { listDispensers, createDispenser, updateDispenser, deleteDispenser } from '../../api/dispensers';
 import { listAreas } from '../../api/areas';
 import { useNotificationStore } from '../../store/notification-store';
+import { AdminPageHeader, AdminTableCard } from '../../components/admin/admin-page';
 import type { DispenserConfigRow, AreaRow } from '../../types';
 
 export default function DispenserManagement() {
@@ -107,31 +108,35 @@ export default function DispenserManagement() {
 
   return (
     <VStack gap={6} align="stretch">
-      <Flex justify="space-between" align="center">
-        <Heading size="lg">Dispensadores</Heading>
-        <Button colorPalette="teal" onClick={() => { setForm({ name: '', areaId: '', username: '', password: '' }); setCreateOpen(true); }}>+ Dispensador</Button>
-      </Flex>
+      <AdminPageHeader
+        title="Dispensadores"
+        description="Administre os quiosques de emissão de senhas e a ligação deles às áreas."
+        action={<Button colorPalette="teal" onClick={() => { setForm({ name: '', areaId: '', username: '', password: '' }); setCreateOpen(true); }}>+ Dispensador</Button>}
+      />
 
       {loading ? <Text>Carregando...</Text> : dispensers.length === 0 ? (
         <Text color="gray.500">Nenhum dispensador — clique + para adicionar.</Text>
       ) : (
+        <AdminTableCard>
         <Table.Root>
           <Table.Header>
-            <Table.Row>
+            <Table.Row bg="gray.50">
               <Table.ColumnHeader>Nome</Table.ColumnHeader>
+              <Table.ColumnHeader>Utilizador</Table.ColumnHeader>
               <Table.ColumnHeader>Área</Table.ColumnHeader>
               <Table.ColumnHeader>Estado</Table.ColumnHeader>
-              <Table.ColumnHeader>Acções</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="right">Acções</Table.ColumnHeader>
             </Table.Row>
           </Table.Header>
           <Table.Body>
             {dispensers.map((d) => (
               <Table.Row key={d.id}>
                 <Table.Cell fontWeight="medium">{d.name}</Table.Cell>
+                <Table.Cell color="gray.600" fontSize="sm">{d.username}</Table.Cell>
                 <Table.Cell>{areaName(d.areaId)}</Table.Cell>
                 <Table.Cell><Badge colorPalette={d.active ? 'green' : 'red'}>{d.active ? 'Activo' : 'Inactivo'}</Badge></Table.Cell>
                 <Table.Cell>
-                  <Flex gap={1}>
+                  <Flex gap={1} justify="flex-end" wrap="wrap">
                     <Button size="sm" variant="ghost" onClick={() => openEdit(d)}>Editar</Button>
                     <Button size="sm" variant="ghost" onClick={() => handleToggle(d)}>{d.active ? 'Desactivar' : 'Activar'}</Button>
                     <Button size="sm" variant="ghost" colorPalette="red" onClick={() => handleDeleteClick(d)}>Eliminar</Button>
@@ -141,6 +146,7 @@ export default function DispenserManagement() {
             ))}
           </Table.Body>
         </Table.Root>
+        </AdminTableCard>
       )}
 
       <Dialog.Root open={createOpen} onOpenChange={(e: { open: boolean }) => setCreateOpen(e.open)}>
@@ -190,6 +196,7 @@ export default function DispenserManagement() {
                 <Dialog.Body py={4}>
                   <VStack gap={4}>
                     <Field.Root><Field.Label fontSize="sm" fontWeight="500" mb={1}>Nome</Field.Label><Input value={form.name} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setForm(f => ({ ...f, name: e.target.value }))} /></Field.Root>
+                    <Field.Root><Field.Label fontSize="sm" fontWeight="500" mb={1}>Nome de Utilizador</Field.Label><Input value={editing?.username || ''} disabled bg="gray.50" /></Field.Root>
                     <Field.Root>
                       <Field.Label fontSize="sm" fontWeight="500" mb={1}>Área</Field.Label>
                       <NativeSelect.Root>

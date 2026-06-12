@@ -1,7 +1,7 @@
 // Admin — Station Management page with service assignments
 
 import { useState, useEffect } from 'react';
-import { Heading, Text, VStack, Button, Badge, Flex, Dialog, Portal } from '@chakra-ui/react';
+import { Text, VStack, Button, Badge, Flex, Dialog, Portal } from '@chakra-ui/react';
 import { Table } from '@chakra-ui/react';
 import { Field, Input } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
@@ -10,6 +10,7 @@ import { listAreas } from '../../api/areas';
 import { listUsers } from '../../api/users';
 import { listServices } from '../../api/services';
 import { useNotificationStore } from '../../store/notification-store';
+import { AdminPageHeader, AdminTableCard } from '../../components/admin/admin-page';
 import type { StationRow, AreaRow, UserRow, ServiceRow } from '../../types';
 
 export default function StationManagement() {
@@ -114,23 +115,25 @@ export default function StationManagement() {
 
   return (
     <VStack gap={6} align="stretch">
-      <Flex justify="space-between" align="center">
-        <Heading size="lg">Estações</Heading>
-        <Button colorPalette="teal" onClick={() => { setForm({ name: '', description: '', areaId: '', receptionUserId: '', serviceIds: [] }); setCreateOpen(true); }}>+ Estação</Button>
-      </Flex>
+      <AdminPageHeader
+        title="Estações"
+        description="Administre balcões, recepcionistas e serviços disponíveis em cada estação."
+        action={<Button colorPalette="teal" onClick={() => { setForm({ name: '', description: '', areaId: '', receptionUserId: '', serviceIds: [] }); setCreateOpen(true); }}>+ Estação</Button>}
+      />
 
       {loading ? <Text>Carregando...</Text> : stations.length === 0 ? (
         <Text color="gray.500">Nenhuma estação — clique + para adicionar.</Text>
       ) : (
+        <AdminTableCard>
         <Table.Root>
           <Table.Header>
-            <Table.Row>
+            <Table.Row bg="gray.50">
               <Table.ColumnHeader>Nome para chamar</Table.ColumnHeader>
               <Table.ColumnHeader>Nome da Estação</Table.ColumnHeader>
               <Table.ColumnHeader>Área</Table.ColumnHeader>
               <Table.ColumnHeader>Recepcionista</Table.ColumnHeader>
               <Table.ColumnHeader>Serviços</Table.ColumnHeader>
-              <Table.ColumnHeader>Acções</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="right">Acções</Table.ColumnHeader>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -146,7 +149,7 @@ export default function StationManagement() {
                   </Badge>
                 </Table.Cell>
                 <Table.Cell>
-                  <Flex gap={1}>
+                  <Flex gap={1} justify="flex-end" wrap="wrap">
                     <Button size="sm" variant="ghost" onClick={() => openEdit(st)}>Editar</Button>
                     <Button size="sm" variant="ghost" colorPalette="red" onClick={() => handleDeleteClick(st)}>Eliminar</Button>
                   </Flex>
@@ -155,6 +158,7 @@ export default function StationManagement() {
             ))}
           </Table.Body>
         </Table.Root>
+        </AdminTableCard>
       )}
 
       <Dialog.Root open={createOpen} onOpenChange={(e: { open: boolean }) => setCreateOpen(e.open)}>

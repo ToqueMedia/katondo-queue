@@ -2,6 +2,7 @@
 
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import { Box } from '@chakra-ui/react';
 import { useAuthStore } from './store/auth-store';
 
 // Global auth expiry listener — redirects to login when JWT expires
@@ -35,7 +36,9 @@ import StationManagement from './pages/admin/station-management';
 import DisplayManagement from './pages/admin/display-management';
 import DispenserManagement from './pages/admin/dispenser-management';
 import Indicators from './pages/admin/indicators';
+import TicketManagement from './pages/admin/ticket-management';
 import AdminSettings from './pages/admin/settings';
+import BackupManagement from './pages/admin/backup';
 import ReceptionQueue from './pages/reception/queue-panel';
 import ManagementDashboard from './pages/management/dashboard';
 import AdManagement from './pages/management/ad-management';
@@ -80,7 +83,9 @@ export default function App() {
                 <Route path="displays" element={<DisplayManagement />} />
                 <Route path="dispensers" element={<DispenserManagement />} />
                 <Route path="indicators" element={<Indicators />} />
+                <Route path="tickets" element={<TicketManagement />} />
                 <Route path="settings" element={<AdminSettings />} />
+                <Route path="backup" element={<BackupManagement />} />
                 <Route path="account" element={<MyAccount />} />
                 <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
               </Routes>
@@ -93,6 +98,7 @@ export default function App() {
           <RoleGuard allowedRoles={['reception']}>
             <Routes>
               <Route path="queue" element={<ReceptionQueue />} />
+              <Route path="account" element={<Box minH="100vh" bg="#FAFAF9" p={8}><MyAccount /></Box>} />
               <Route path="*" element={<Navigate to="/reception/queue" replace />} />
             </Routes>
           </RoleGuard>

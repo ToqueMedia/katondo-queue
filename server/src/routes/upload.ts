@@ -12,7 +12,7 @@ router.post('/ad-media', authMiddleware, requireRole('management'), (req: Reques
   uploadMiddleware.single('file')(req, res, (err: any) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({ error: 'Ficheiro demasiado grande. O limite máximo permitido é de 200MB.' });
+        return res.status(400).json({ error: 'Ficheiro demasiado grande. O limite máximo permitido é de 100MB.' });
       }
       return res.status(400).json({ error: err.message || 'Erro ao carregar o ficheiro.' });
     }

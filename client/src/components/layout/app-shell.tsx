@@ -3,6 +3,7 @@
 import { Box, Flex, Text, IconButton, VStack, HStack, Badge, Separator } from '@chakra-ui/react';
 import { useAuthStore } from '../../store/auth-store';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { logout as apiLogout } from '../../api/auth';
 
 interface SidebarItem {
   label: string;
@@ -23,8 +24,10 @@ const SIDEBAR_ITEMS: Record<string, SidebarItem[]> = {
     { label: 'Estações', path: '/admin/stations', icon: '🖥' },
     { label: 'Displays', path: '/admin/displays', icon: '📺' },
     { label: 'Dispensadores', path: '/admin/dispensers', icon: '📱' },
+    { label: 'Gestão de Senhas', path: '/admin/tickets', icon: '🎫' },
     { label: 'Indicadores', path: '/admin/indicators', icon: '📊' },
     { label: 'Configurações', path: '/admin/settings', icon: '⚙️' },
+    { label: 'Backup de Dados', path: '/admin/backup', icon: '💾' },
     { label: 'Minha Conta', path: '/admin/account', icon: '🔒' },
   ],
   management: [
@@ -188,7 +191,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               size="sm"
               variant="ghost"
               aria-label="Sair"
-              onClick={() => {
+              onClick={async () => {
+                try {
+                  await apiLogout();
+                } catch (e) {
+                  console.error('Logout API failed', e);
+                }
                 authStore.logout();
                 navigate('/login');
               }}

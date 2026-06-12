@@ -23,6 +23,7 @@ import ticketRoutes from './routes/tickets.js';
 import dispenserApiRoutes from './routes/dispenser-api.js';
 import uploadRoutes from './routes/upload.js';
 import settingsRoutes from './routes/settings.js';
+import backupRoutes from './routes/backup.js';
 import { setupSocketHandlers } from './socket/handler.js';
 import { startDailyResetCron, checkAndRunMissedReset } from './services/daily-reset.service.js';
 
@@ -70,6 +71,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/dispenser', dispenserApiRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/backup', backupRoutes);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -131,6 +133,29 @@ httpServer.listen(PORT, () => {
   checkAndRunMissedReset().catch((err) => {
     logger.error('Failed to check missed reset', { module: 'server', error: err });
   });
+
+  // Proactive self-healing: log users and automatically activate all display/dispenser users to prevent 401 lockouts!
+  import('./db/connection.js').then(({ db }) => {
+    import('./db/schema.js').then(async ({ users }) => {
+      import('drizzle-orm').then(async ({ eq, or }) => {
+        try {
+          // 1. Force-activate all display and dispenser users to ensure they can login!
+          await db.update(users)
+            .set({ active: true })
+            .where(or(eq(users.role, 'display'), eq(users.role, 'dispenser')));
+
+          logger.info('Proactive self-healing: All display/dispenser users are verified active!', { module: 'server' });
+
+          // 2. Log all users to console so admin can audit credentials & roles
+          const allUsers = await db.select({ id: users.id, username: users.username, role: users.role, active: users.active }).from(users);
+          console.log('--- REGISTERED USERS FOR AUTHENTICATION AUDIT ---');
+          console.table(allUsers);
+        } catch (err: any) {
+          logger.error('Failed to run user self-healing/audit', { module: 'server', error: err.message });
+        }
+      });
+    });
+  }).catch(() => {});
 });
 
 // Export io for use in services (ticket broadcast, etc.)

@@ -22,7 +22,7 @@ const updateSchema = z.object({
 
 router.use(authMiddleware);
 
-router.get('/', requireRole('admin', 'management'), async (req, res) => {
+router.get('/', requireRole('admin', 'management', 'reception'), async (req, res) => {
   try {
     const includeInactive = req.query.includeInactive === 'true';
     const result = await areaService.listAreas(includeInactive);

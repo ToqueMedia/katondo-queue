@@ -1,9 +1,10 @@
 // Admin — Database Backup management with progress bar and local file saving
 
 import { useState, useEffect } from 'react';
-import { Heading, Text, VStack, Button, Card, Flex, Badge, Box, Separator, Alert } from '@chakra-ui/react';
+import { Heading, Text, VStack, Button, Flex, Badge, Box, Separator, Alert, SimpleGrid } from '@chakra-ui/react';
 import { getBackupStatus, triggerBackupDownload } from '../../api/backup';
 import { useNotificationStore } from '../../store/notification-store';
+import { AdminPageHeader, AdminSectionCard } from '../../components/admin/admin-page';
 import type { BackupStatusResponse } from '../../api/backup';
 
 export default function BackupManagement() {
@@ -42,7 +43,7 @@ export default function BackupManagement() {
         }
         return prev + 10;
       });
-    }, 150;
+    }, 150);
 
     try {
       const blob = await triggerBackupDownload();
@@ -78,22 +79,18 @@ export default function BackupManagement() {
   if (loading) {
     return (
       <VStack gap={4} align="stretch">
-        <Heading size="lg" fontFamily="heading" color="brand.700">Backup de Segurança</Heading>
-        <Card.Root><Card.Body><Text>Carregando...</Text></Card.Body></Card.Root>
+        <AdminPageHeader title="Cópias de Segurança" />
+        <AdminSectionCard><Box p={6}><Text>Carregando...</Text></Box></AdminSectionCard>
       </VStack>
     );
   }
 
   return (
     <VStack gap={6} align="stretch">
-      <VStack gap={1} align="start">
-        <Heading size="lg" fontFamily="heading" fontWeight="400" color="brand.700">
-          Cópias de Segurança (Backup)
-        </Heading>
-        <Text color="ink.muted" fontSize="sm">
-          Gerencie e efetue o descarregamento da base de dados no formato padrão SQL.
-        </Text>
-      </VStack>
+      <AdminPageHeader
+        title="Cópias de Segurança"
+        description="Gere e descarregue cópias SQL da base de dados para proteção operacional."
+      />
 
       {status?.isOverdue && (
         <Alert.Root status="warning" variant="subtle" borderRadius="12px">
@@ -110,8 +107,8 @@ export default function BackupManagement() {
 
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={6}>
         {/* Main Backup Action Card */}
-        <Card.Root p={6} borderRadius="20px" bg="white" shadow="card" border="1px solid" borderColor="blackAlpha.50">
-          <VStack gap={5} align="stretch">
+        <AdminSectionCard>
+          <VStack gap={5} align="stretch" p={6}>
             <VStack gap={1} align="start">
               <Text fontSize="xs" fontWeight="bold" color="brand.600" textTransform="uppercase" letterSpacing="0.05em">Efectuar Backup</Text>
               <Heading size="md" fontWeight="600" color="ink.DEFAULT">Exportar Base de Dados</Heading>
@@ -151,19 +148,19 @@ export default function BackupManagement() {
               colorPalette="teal"
               size="lg"
               h={12}
-              borderRadius="12px"
+              borderRadius="10px"
               fontWeight="600"
               onClick={handleChimeSoundThenBackup}
               loading={backingUp}
             >
-              💾 Gerar e Guardar Backup (.sql)
+              Gerar e Guardar Backup (.sql)
             </Button>
           </VStack>
-        </Card.Root>
+        </AdminSectionCard>
 
         {/* Information & Instructions Card */}
-        <Card.Root p={6} borderRadius="20px" bg="surface.muted" border="1px solid" borderColor="blackAlpha.50">
-          <VStack gap={4} align="stretch">
+        <AdminSectionCard muted>
+          <VStack gap={4} align="stretch" p={6}>
             <Heading size="sm" fontWeight="600" color="ink.DEFAULT">Boas Práticas de Segurança</Heading>
 
             <VStack gap={3} align="start" fontSize="sm" color="ink.muted">
@@ -172,7 +169,7 @@ export default function BackupManagement() {
               <Text>• <strong>Importação/Restauro:</strong> O arquivo gerado é compatível com qualquer servidor MySQL standard e pode ser importado via phpMyAdmin ou CLI.</Text>
             </VStack>
           </VStack>
-        </Card.Root>
+        </AdminSectionCard>
       </SimpleGrid>
     </VStack>
   );

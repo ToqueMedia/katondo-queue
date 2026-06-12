@@ -13,7 +13,7 @@ const router = Router();
 router.use(authMiddleware);
 
 // GET /api/backup/status — check last backup date & overdue status
-router.get('/status', requireRole('admin'), async (req, res) => {
+router.get('/status', requireRole('admin'), async (_req, res) => {
   try {
     let lastBackupSetting = await db.query.systemSettings.findFirst({
       where: eq(systemSettings.key, 'last_backup_date'),
@@ -56,7 +56,7 @@ router.get('/status', requireRole('admin'), async (req, res) => {
 });
 
 // GET /api/backup/download — generate and stream database backup SQL file
-router.get('/download', requireRole('admin'), async (req, res) => {
+router.get('/download', requireRole('admin'), async (_req, res) => {
   try {
     logger.info('Generating database SQL dump...', { module: 'backup' });
 

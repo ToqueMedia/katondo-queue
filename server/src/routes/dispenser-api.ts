@@ -52,7 +52,7 @@ router.post('/tickets', authMiddleware, async (req, res) => {
     });
 
     const waitingCount = await ticketService.getWaitingCount(data.areaId);
-    const nextTickets = await ticketService.listTickets(data.areaId, 'waiting');
+    const nextTickets = await ticketService.listTickets(data.areaId, 'waiting', 'today');
     broadcastToArea(io, data.areaId, 'queue:updated', {
       waitingCount,
       nextTickets: nextTickets.slice(0, 8).map(t => ({

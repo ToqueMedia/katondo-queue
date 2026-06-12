@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Heading, Text, VStack, Button, Card, SimpleGrid, Table, Flex, Input } from '@chakra-ui/react';
 import { getIndicatorsForRange } from '../../api/indicators';
 import { useNotificationStore } from '../../store/notification-store';
+import { AdminPageHeader, AdminTableCard } from '../../components/admin/admin-page';
+import { formatDurationFromMinutes } from '../../utils/time-format';
 import type { RangeIndicators } from '../../api/indicators';
 
 export default function Indicators() {
@@ -31,7 +33,10 @@ export default function Indicators() {
 
   return (
     <VStack gap={6} align="stretch">
-      <Heading size="lg">Indicadores e Relatórios</Heading>
+      <AdminPageHeader
+        title="Indicadores e Relatórios"
+        description="Analise volume de senhas, tempos médios e desempenho diário no período selecionado."
+      />
 
       <Flex gap={4} align="flex-end">
         <VStack align="stretch" gap={1}>
@@ -47,35 +52,36 @@ export default function Indicators() {
 
       {data && (
         <>
-          <SimpleGrid columns={4} gap={4}>
-            <Card.Root p={6}>
+          <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} gap={4}>
+            <Card.Root p={6} bg="white" borderRadius="10px" border="1px solid" borderColor="blackAlpha.100" shadow="sm">
               <VStack align="center" gap={2}>
                 <Text color="gray.500" fontSize="sm">Senhas Emitidas</Text>
                 <Heading size="3xl" color="teal.600">{data.summary.issued}</Heading>
               </VStack>
             </Card.Root>
-            <Card.Root p={6}>
+            <Card.Root p={6} bg="white" borderRadius="10px" border="1px solid" borderColor="blackAlpha.100" shadow="sm">
               <VStack align="center" gap={2}>
                 <Text color="gray.500" fontSize="sm">Senhas Atendidas</Text>
                 <Heading size="3xl" color="green.600">{data.summary.served}</Heading>
               </VStack>
             </Card.Root>
-            <Card.Root p={6}>
+            <Card.Root p={6} bg="white" borderRadius="10px" border="1px solid" borderColor="blackAlpha.100" shadow="sm">
               <VStack align="center" gap={2}>
                 <Text color="gray.500" fontSize="sm">Tempo Médio Espera</Text>
-                <Heading size="3xl" color="orange.600">{data.summary.avgWaitMin} min</Heading>
+                <Heading size="3xl" color="orange.600">{formatDurationFromMinutes(data.summary.avgWaitMin)}</Heading>
               </VStack>
             </Card.Root>
-            <Card.Root p={6}>
+            <Card.Root p={6} bg="white" borderRadius="10px" border="1px solid" borderColor="blackAlpha.100" shadow="sm">
               <VStack align="center" gap={2}>
                 <Text color="gray.500" fontSize="sm">Tempo Médio Atendimento</Text>
-                <Heading size="3xl" color="blue.600">{data.summary.avgServiceMin} min</Heading>
+                <Heading size="3xl" color="blue.600">{formatDurationFromMinutes(data.summary.avgServiceMin)}</Heading>
               </VStack>
             </Card.Root>
           </SimpleGrid>
 
-          <Card.Root p={6}>
-            <Heading size="md" mb={4}>Detalhamento Diário</Heading>
+          <AdminTableCard>
+            <VStack align="stretch" gap={4} p={5}>
+            <Heading size="md">Detalhamento Diário</Heading>
             {data.daily.length === 0 ? (
               <Text color="gray.500">Sem dados para o período seleccionado.</Text>
             ) : (
@@ -99,14 +105,15 @@ export default function Indicators() {
                       <Table.Cell>{day.served}</Table.Cell>
                       <Table.Cell>{day.cancelled}</Table.Cell>
                       <Table.Cell>{day.noShow}</Table.Cell>
-                      <Table.Cell>{day.avgWaitMin} min</Table.Cell>
-                      <Table.Cell>{day.avgServiceMin} min</Table.Cell>
+                      <Table.Cell>{formatDurationFromMinutes(day.avgWaitMin)}</Table.Cell>
+                      <Table.Cell>{formatDurationFromMinutes(day.avgServiceMin)}</Table.Cell>
                     </Table.Row>
                   ))}
                 </Table.Body>
               </Table.Root>
             )}
-          </Card.Root>
+            </VStack>
+          </AdminTableCard>
         </>
       )}
     </VStack>

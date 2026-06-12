@@ -56,8 +56,12 @@ class DisplayViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, errorMessage = null)
 
-            // Build server URL from host and port
-            val baseUrl = "http://$serverHost:$serverPort"
+            // Build server URL from host and port safely (supports full http/https URLs)
+            val baseUrl = if (serverHost.startsWith("http://") || serverHost.startsWith("https://")) {
+                "$serverHost:$serverPort"
+            } else {
+                "http://$serverHost:$serverPort"
+            }
             serverBaseUrl = baseUrl
             apiClient = ApiClient(baseUrl)
 
@@ -111,12 +115,6 @@ class DisplayViewModel(application: Application) : AndroidViewModel(application)
             }
 
             onTicketCalled = { ticket, voiceText ->
-                val updatedActiveTickets = _state.value.activeTickets.toMutableList()
-                if (ticket.stationId != null) {
-                    updatedActiveTickets.removeAll { it.stationId == ticket.stationId }
-                }
-                updatedActiveTickets.add(0, ticket)
-
                 val updatedRecentCalls = _state.value.recentCalls.toMutableList()
                 updatedRecentCalls.removeAll { it.id == ticket.id }
                 updatedRecentCalls.add(0, ticket)
@@ -125,7 +123,6 @@ class DisplayViewModel(application: Application) : AndroidViewModel(application)
                     currentTicket = ticket,
                     currentVoiceText = voiceText,
                     nextTickets = _state.value.nextTickets.filter { it.id != ticket.id },
-                    activeTickets = updatedActiveTickets,
                     recentCalls = updatedRecentCalls.take(3)
                 )
                 
@@ -134,7 +131,25 @@ class DisplayViewModel(application: Application) : AndroidViewModel(application)
             }
 
             onTicketStarted = { ticketId ->
-                // Ticket already updated via socket
+                val sourceTicket = _state.value.recentCalls.find { it.id == ticketId }
+                    ?: _state.value.currentTicket?.takeIf { it.id == ticketId }
+
+                if (sourceTicket != null) {
+                    val inServiceTicket = sourceTicket.copy(status = "in_service")
+                    val updatedActiveTickets = _state.value.activeTickets
+                        .filter { it.id != ticketId && it.stationId != inServiceTicket.stationId }
+                        .toMutableList()
+                    updatedActiveTickets.add(0, inServiceTicket)
+
+                    _state.value = _state.value.copy(
+                        activeTickets = updatedActiveTickets,
+                        currentTicket = _state.value.currentTicket?.let {
+                            if (it.id == ticketId) inServiceTicket else it
+                        }
+                    )
+                } else {
+                    loadInitialTickets()
+                }
             }
 
             onTicketCompleted = { ticketId ->
@@ -159,30 +174,40 @@ class DisplayViewModel(application: Application) : AndroidViewModel(application)
             }
 
             onAdsUpdated = {
-                loadAdvertisements()
+                viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+                    Log.i(TAG, "Socket event 'ads:updated' received! Reloading advertisements...")
+                    loadAdvertisements()
+                }
             }
 
             connect()
         }
     }
 
-    private fun loadAdvertisements() {
-        viewModelScope.launch {
+    fun loadAdvertisements() {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
             val areaId = _state.value.user?.areaId
             val currentBaseUrl = serverBaseUrl ?: ""
-            apiClient?.getAdvertisements(token ?: "", areaId)?.onSuccess { ads ->
-                val processedAds = ads.map { ad ->
-                    if (ad.contentUrl != null && ad.contentUrl.startsWith("/")) {
-                        ad.copy(contentUrl = currentBaseUrl + ad.contentUrl)
-                    } else {
-                        ad
+            Log.i(TAG, "Fetching advertisements for areaId: $areaId from server: $currentBaseUrl")
+            apiClient?.getAdvertisements(token ?: "", areaId)
+                ?.onSuccess { ads ->
+                    val processedAds = ads.map { ad ->
+                        if (ad.contentUrl != null && ad.contentUrl.startsWith("/")) {
+                            ad.copy(contentUrl = currentBaseUrl + ad.contentUrl)
+                        } else {
+                            ad
+                        }
                     }
+                    val activeAds = processedAds.filter { it.active }
+                    Log.i(TAG, "Advertisements loaded successfully. Total: ${ads.size}, Active: ${activeAds.size}")
+                    _state.value = _state.value.copy(
+                        advertisements = activeAds,
+                        currentAdIndex = 0
+                    )
                 }
-                _state.value = _state.value.copy(
-                    advertisements = processedAds.filter { it.active },
-                    currentAdIndex = 0
-                )
-            }
+                ?.onFailure { error ->
+                    Log.e(TAG, "Failed to load advertisements", error)
+                }
         }
     }
 
@@ -247,16 +272,17 @@ class DisplayViewModel(application: Application) : AndroidViewModel(application)
     private fun loadInitialTickets() {
         val areaId = _state.value.user?.areaId
         val currentToken = token ?: return
-        val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
 
         viewModelScope.launch {
-            apiClient?.getTickets(currentToken, areaId, status = null, date = todayStr)?.onSuccess { allTickets ->
+            // Use "today" so that the server calculates the date in its own timezone (Africa/Luanda),
+            // making the app 100% immune to wrong local clocks/dates on Android TV devices.
+            apiClient?.getTickets(currentToken, areaId, status = null, date = "today")?.onSuccess { allTickets ->
                 val waitingTickets = allTickets.filter { it.status == "waiting" }
                 
-                // Active tickets are those with called or in_service status
+                // Active tickets are only those already started by the station user.
                 val activeTickets = allTickets
-                    .filter { it.status == "called" || it.status == "in_service" }
-                    .sortedByDescending { it.calledAt ?: "" }
+                    .filter { it.status == "in_service" }
+                    .sortedByDescending { it.startedAt ?: it.calledAt ?: "" }
 
                 // The last called ticket is the one with the latest calledAt timestamp
                 val lastCalledTicket = allTickets
@@ -305,48 +331,49 @@ class DisplayViewModel(application: Application) : AndroidViewModel(application)
                     Log.e(TAG, "Failed to adjust system stream volume", e)
                 }
 
-                // Build the media item URL or raw resource URI!
-                val mediaUri = if (soundMode == "chime" || !soundMode.startsWith("/uploads/")) {
-                    // Raw resource URI for queue_chime.mp3!
-                    android.net.Uri.parse("android.resource://" + getApplication<Application>().packageName + "/" + ao.katondo.display.R.raw.queue_chime)
-                } else {
+                val customMode = soundMode != "chime" && soundMode.startsWith("/uploads/")
+                Log.i(TAG, "Playing sound via MediaPlayer. Custom mode: $customMode. Mode: $soundMode")
+
+                val mediaPlayer = if (customMode) {
                     // Custom uploaded sound URL: http://[ip-servidor]:[porta]/uploads/nome_do_arquivo.mp3
-                    android.net.Uri.parse((serverBaseUrl ?: "") + soundMode)
+                    val customUri = android.net.Uri.parse((serverBaseUrl ?: "") + soundMode)
+                    android.media.MediaPlayer().apply {
+                        setAudioAttributes(
+                            android.media.AudioAttributes.Builder()
+                                .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                                .build()
+                        )
+                        setDataSource(getApplication(), customUri)
+                    }
+                } else {
+                    // Raw resource directly using robust MediaPlayer.create (No URI parsing or stream issues)
+                    android.media.MediaPlayer.create(getApplication(), ao.katondo.display.R.raw.queue_chime)
                 }
 
-                Log.i(TAG, "Playing sound via ExoPlayer: $mediaUri")
-
-                // Create a lightweight ExoPlayer instance specifically for this playback (robust & universal on TVs)
-                val player = androidx.media3.exoplayer.ExoPlayer.Builder(getApplication()).build()
-                val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
-                    .setUsage(androidx.media3.common.C.USAGE_MEDIA)
-                    .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
-                    .build()
-                player.setAudioAttributes(audioAttributes, true)
-                player.setMediaItem(androidx.media3.common.MediaItem.fromUri(mediaUri))
-                player.volume = 1.0f
-                player.prepare()
-                player.playWhenReady = true
-
-                player.addListener(object : androidx.media3.common.Player.Listener {
-                    override fun onPlaybackStateChanged(state: Int) {
-                        if (state == androidx.media3.common.Player.STATE_ENDED) {
-                            player.release()
-                        }
+                mediaPlayer?.apply {
+                    if (customMode) {
+                        prepareAsync()
+                        setOnPreparedListener { start() }
+                    } else {
+                        start()
                     }
 
-                    override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                        Log.e(TAG, "ExoPlayer playback error, releasing", error)
-                        player.release()
-                        
-                        // Fallback to local raw chime if network URL fails
-                        if (soundMode.startsWith("/uploads/")) {
+                    setOnCompletionListener {
+                        it.release()
+                    }
+
+                    setOnErrorListener { mp, what, extra ->
+                        Log.e(TAG, "MediaPlayer error: what=$what, extra=$extra. Releasing and falling back.")
+                        mp.release()
+                        if (customMode) {
                             playLocalFallbackChime()
                         }
+                        true
                     }
-                })
+                }
             } catch (e: Exception) {
-                Log.e(TAG, "Error playing sound via ExoPlayer", e)
+                Log.e(TAG, "Error playing sound via MediaPlayer", e)
             }
         }
     }
@@ -354,29 +381,19 @@ class DisplayViewModel(application: Application) : AndroidViewModel(application)
     private fun playLocalFallbackChime() {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.Main) {
             try {
-                val mediaUri = android.net.Uri.parse("android.resource://" + getApplication<Application>().packageName + "/" + ao.katondo.display.R.raw.queue_chime)
-                val player = androidx.media3.exoplayer.ExoPlayer.Builder(getApplication()).build()
-                val audioAttributes = androidx.media3.common.AudioAttributes.Builder()
-                    .setUsage(androidx.media3.common.C.USAGE_MEDIA)
-                    .setContentType(androidx.media3.common.C.AUDIO_CONTENT_TYPE_MUSIC)
-                    .build()
-                player.setAudioAttributes(audioAttributes, true)
-                player.setMediaItem(androidx.media3.common.MediaItem.fromUri(mediaUri))
-                player.volume = 1.0f
-                player.prepare()
-                player.playWhenReady = true
-                player.addListener(object : androidx.media3.common.Player.Listener {
-                    override fun onPlaybackStateChanged(state: Int) {
-                        if (state == androidx.media3.common.Player.STATE_ENDED) {
-                            player.release()
-                        }
+                val mediaPlayer = android.media.MediaPlayer.create(getApplication(), ao.katondo.display.R.raw.queue_chime)
+                mediaPlayer?.apply {
+                    start()
+                    setOnCompletionListener {
+                        it.release()
                     }
-                    override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                        player.release()
+                    setOnErrorListener { mp, _, _ ->
+                        mp.release()
+                        true
                     }
-                })
+                }
             } catch (e: Exception) {
-                Log.e(TAG, "Error playing local fallback chime", e)
+                Log.e(TAG, "Error playing local fallback chime via MediaPlayer", e)
             }
         }
     }

@@ -12,6 +12,7 @@ import { listTickets, getActiveTicket } from '../../api/tickets';
 import { listAreas } from '../../api/areas';
 import { listStations } from '../../api/stations';
 import { updateActiveStation } from '../../api/users';
+import { logout as apiLogout } from '../../api/auth';
 import { useNotificationStore } from '../../store/notification-store';
 import type { TicketRow, AreaRow, StationRow } from '../../types';
 
@@ -114,7 +115,7 @@ export default function ReceptionQueue() {
     }
   }, [queueStore.currentTicket?.id, areaId]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (hasActiveTicket) {
       notify.addNotification({
         type: 'warning',
@@ -122,6 +123,11 @@ export default function ReceptionQueue() {
         description: 'Termine ou cancele a senha em atendimento antes de sair.',
       });
       return;
+    }
+    try {
+      await apiLogout();
+    } catch (e) {
+      console.error('Logout API failed', e);
     }
     authStore.logout();
     navigate('/login');

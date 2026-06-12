@@ -1,11 +1,12 @@
 // Admin — Area Management page
 
 import { useState, useEffect } from 'react';
-import { Heading, Text, VStack, Button, Badge, Flex, Dialog } from '@chakra-ui/react';
+import { Text, VStack, Button, Badge, Flex, Dialog } from '@chakra-ui/react';
 import { Table } from '@chakra-ui/react';
 import { Field, Input } from '@chakra-ui/react';
 import { listAreas, createArea, updateArea, deleteArea } from '../../api/areas';
 import { useNotificationStore } from '../../store/notification-store';
+import { AdminPageHeader, AdminTableCard } from '../../components/admin/admin-page';
 import type { AreaRow } from '../../types';
 
 export default function AreaManagement() {
@@ -95,21 +96,23 @@ export default function AreaManagement() {
 
   return (
     <VStack gap={6} align="stretch">
-      <Flex justify="space-between" align="center">
-        <Heading size="lg">Áreas</Heading>
-        <Button colorPalette="teal" onClick={() => { setForm({ name: '', description: '' }); setCreateOpen(true); }}>+ Área</Button>
-      </Flex>
+      <AdminPageHeader
+        title="Áreas"
+        description="Organize os espaços da clínica onde serviços, estações e equipamentos operam."
+        action={<Button colorPalette="teal" onClick={() => { setForm({ name: '', description: '' }); setCreateOpen(true); }}>+ Área</Button>}
+      />
 
       {loading ? <Text>Carregando...</Text> : areas.length === 0 ? (
         <Text color="gray.500">Nenhuma área — clique + para adicionar a primeira área.</Text>
       ) : (
+        <AdminTableCard>
         <Table.Root>
           <Table.Header>
-            <Table.Row>
+            <Table.Row bg="gray.50">
               <Table.ColumnHeader>Nome</Table.ColumnHeader>
               <Table.ColumnHeader>Descrição</Table.ColumnHeader>
               <Table.ColumnHeader>Estado</Table.ColumnHeader>
-              <Table.ColumnHeader>Acções</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="right">Acções</Table.ColumnHeader>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -119,7 +122,7 @@ export default function AreaManagement() {
                 <Table.Cell>{a.description || '—'}</Table.Cell>
                 <Table.Cell><Badge colorPalette={a.active ? 'green' : 'red'}>{a.active ? 'Activa' : 'Inactiva'}</Badge></Table.Cell>
                 <Table.Cell>
-                  <Flex gap={1}>
+                  <Flex gap={1} justify="flex-end" wrap="wrap">
                     <Button size="sm" variant="ghost" onClick={() => openEdit(a)}>Editar</Button>
                     <Button size="sm" variant="ghost" onClick={() => handleToggle(a)}>{a.active ? 'Desactivar' : 'Activar'}</Button>
                     <Button size="sm" variant="ghost" colorPalette="red" onClick={() => handleDeleteClick(a)}>Eliminar</Button>
@@ -129,6 +132,7 @@ export default function AreaManagement() {
             ))}
           </Table.Body>
         </Table.Root>
+        </AdminTableCard>
       )}
 
       <Dialog.Root open={createOpen} onOpenChange={(e: { open: boolean }) => setCreateOpen(e.open)}>

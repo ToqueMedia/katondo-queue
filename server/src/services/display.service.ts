@@ -1,6 +1,6 @@
 // Display service — CRUD + create display user
 
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db } from '../db/connection.js';
 import { displayConfigs, users } from '../db/schema.js';
 import { hashPassword } from './auth.service.js';
@@ -47,9 +47,23 @@ export async function createDisplay(name: string, areaId: number, username: stri
 }
 
 export async function listDisplays() {
-  return db.query.displayConfigs.findMany({
+  const configs = await db.query.displayConfigs.findMany({
     orderBy: (displayConfigs, { asc }) => [asc(displayConfigs.name)],
   });
+
+  const userIds = Array.from(new Set(configs.map((c) => c.userId)));
+  let userMap = new Map<number, string>();
+  if (userIds.length > 0) {
+    const relatedUsers = await db.query.users.findMany({
+      where: inArray(users.id, userIds),
+    });
+    userMap = new Map(relatedUsers.map((u) => [u.id, u.username]));
+  }
+
+  return configs.map((c) => ({
+    ...c,
+    username: userMap.get(c.userId) || '—',
+  }));
 }
 
 export async function getDisplayById(id: number) {
@@ -61,7 +75,14 @@ export async function getDisplayById(id: number) {
     throw new NotFoundError(`Display with id ${id} not found`);
   }
 
-  return display;
+  const user = await db.query.users.findFirst({
+    where: eq(users.id, display.userId),
+  });
+
+  return {
+    ...display,
+    username: user?.username || '—',
+  };
 }
 
 export async function updateDisplay(

@@ -1,9 +1,10 @@
 // Admin — System Settings (server configuration)
 
 import { useState, useEffect } from 'react';
-import { VStack, Heading, Text, Button, Card, Field, Input, Separator } from '@chakra-ui/react';
+import { VStack, Heading, Text, Button, Field, Input, Separator } from '@chakra-ui/react';
 import { getSettings, updateSetting } from '../../api/settings';
 import { useNotificationStore } from '../../store/notification-store';
+import { AdminPageHeader, AdminSectionCard } from '../../components/admin/admin-page';
 
 export default function AdminSettings() {
   const [serverHost, setServerHost] = useState('');
@@ -40,11 +41,13 @@ export default function AdminSettings() {
 
   return (
     <VStack gap={6} align="stretch">
-      <Heading size="lg">Configurações do Sistema</Heading>
+      <AdminPageHeader
+        title="Configurações do Sistema"
+        description="Defina parâmetros usados pelos dispositivos Android e integrações locais."
+      />
 
-      <Card.Root>
-        <Card.Body>
-          <VStack gap={4} align="stretch">
+      <AdminSectionCard>
+          <VStack gap={4} align="stretch" p={6}>
             <Heading size="md">Configuração do Servidor</Heading>
             <Text fontSize="sm" color="gray.600">
               Configure o IP e porta do servidor para os dispositivos Android (displays e dispensadores).
@@ -84,8 +87,7 @@ export default function AdminSettings() {
               Guardar Configurações
             </Button>
           </VStack>
-        </Card.Body>
-      </Card.Root>
+      </AdminSectionCard>
     </VStack>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Heading, Text, VStack, SimpleGrid, Card, Badge, Flex, Box } from '@chakra-ui/react';
 import { getTodayIndicators, getTodayIndicatorsByService } from '../../api/indicators';
 import { useNotificationStore } from '../../store/notification-store';
+import { formatDurationFromMinutes } from '../../utils/time-format';
 import type { TodayIndicators, ServiceIndicators } from '../../api/indicators';
 
 export default function ManagementDashboard() {
@@ -32,7 +33,7 @@ export default function ManagementDashboard() {
     { label: 'Emitidas', value: indicators?.issued ?? 0, color: '#1565C0', bg: '#EFF6FF', icon: '🎫' },
     { label: 'Atendidas', value: indicators?.served ?? 0, color: '#059669', bg: '#ECFDF5', icon: '✓' },
     { label: 'Canceladas', value: indicators?.cancelled ?? 0, color: '#DC2626', bg: '#FEF2F2', icon: '✕' },
-    { label: 'Espera Média', value: `${indicators?.avgWaitMin ?? 0}m`, color: '#D97706', bg: '#FFFBEB', icon: '⏱' },
+    { label: 'Espera Média', value: formatDurationFromMinutes(indicators?.avgWaitMin), color: '#D97706', bg: '#FFFBEB', icon: '⏱' },
   ];
 
   return (
@@ -139,11 +140,11 @@ export default function ManagementDashboard() {
                       <Flex gap={6} align="center">
                         <VStack align="center" gap={0}>
                           <Text fontSize="xs" color="ink.faint">Espera</Text>
-                          <Text fontWeight="600" color="brand.600" fontSize="sm">{svc.avgWaitMin}m</Text>
+                          <Text fontWeight="600" color="brand.600" fontSize="sm">{formatDurationFromMinutes(svc.avgWaitMin)}</Text>
                         </VStack>
                         <VStack align="center" gap={0}>
                           <Text fontSize="xs" color="ink.faint">Atend.</Text>
-                          <Text fontWeight="600" color="emerald.600" fontSize="sm">{svc.avgServiceMin}m</Text>
+                          <Text fontWeight="600" color="emerald.600" fontSize="sm">{formatDurationFromMinutes(svc.avgServiceMin)}</Text>
                         </VStack>
                         <Badge
                           colorPalette={svc.issued > 0 && svc.served / svc.issued > 0.8 ? 'emerald' : 'orange'}

@@ -14,6 +14,7 @@ export const users = mysqlTable('users', {
   role: userRoleEnum.notNull(),
   areaId: int('area_id'),                    // nullable — root/admin/management don't need area
   stationId: int('station_id'),              // nullable — only reception
+  name: varchar('name', { length: 100 }),
   active: boolean('active').notNull().default(true),
   createdBy: int('created_by').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -131,6 +132,7 @@ export const tickets = mysqlTable('tickets', {
   areaId: int('area_id').notNull(),
   status: ticketStatusEnum.notNull(),
   stationId: int('station_id'),
+  userId: int('user_id'),                     // nullable — receptionist user who handled the ticket!
   calledAt: timestamp('called_at'),
   startedAt: timestamp('started_at'),
   completedAt: timestamp('completed_at'),

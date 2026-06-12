@@ -86,14 +86,69 @@ export async function updateAd(
     sortOrder?: number;
   },
 ) {
-  await getAdById(id);
+  const ad = await getAdById(id);
+
+  // If we are replacing an existing local file with a new one or clearing it
+  if (
+    updates.contentUrl !== undefined &&
+    updates.contentUrl !== ad.contentUrl &&
+    ad.contentUrl &&
+    ad.contentUrl.startsWith('/uploads/')
+  ) {
+    import('fs').then(({ unlink }) => {
+      import('path').then(({ join, dirname }) => {
+        import('url').then(({ fileURLToPath }) => {
+          try {
+            const __dirname = dirname(fileURLToPath(import.meta.url));
+            const filename = ad.contentUrl!.replace('/uploads/', '');
+            const filePath = join(__dirname, '..', '..', 'uploads', filename);
+            unlink(filePath, (err) => {
+              if (err && err.code !== 'ENOENT') {
+                logger.error('Failed to delete old ad file', { error: err.message, file: filePath });
+              } else if (!err) {
+                logger.info('Deleted old ad file', { file: filePath });
+              }
+            });
+          } catch (err) {
+            logger.error('Error in old ad file deletion process', { error: err });
+          }
+        });
+      });
+    });
+  }
+
   await db.update(advertisements).set(updates).where(eq(advertisements.id, id));
   logger.info('Ad updated', { module: 'ad', adId: id });
   return getAdById(id);
 }
 
 export async function deleteAd(id: number) {
-  await getAdById(id);
+  const ad = await getAdById(id);
+  
+  // If the ad has a local upload, delete the file
+  if (ad.contentUrl && ad.contentUrl.startsWith('/uploads/')) {
+    import('fs').then(({ unlink }) => {
+      import('path').then(({ join, dirname }) => {
+        import('url').then(({ fileURLToPath }) => {
+          try {
+            const __dirname = dirname(fileURLToPath(import.meta.url));
+            const filename = ad.contentUrl!.replace('/uploads/', '');
+            const filePath = join(__dirname, '..', '..', 'uploads', filename);
+            unlink(filePath, (err) => {
+              if (err && err.code !== 'ENOENT') {
+                logger.error('Failed to delete ad file', { error: err.message, file: filePath });
+              } else if (!err) {
+                logger.info('Deleted ad file', { file: filePath });
+              }
+            });
+          } catch (err) {
+            logger.error('Error in ad file deletion process', { error: err });
+          }
+        });
+      });
+    });
+  }
+
   await db.delete(advertisements).where(eq(advertisements.id, id));
   logger.info('Ad deleted', { module: 'ad', adId: id });
 }

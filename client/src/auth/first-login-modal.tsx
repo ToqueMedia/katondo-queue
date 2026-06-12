@@ -30,7 +30,7 @@ export default function FirstLoginModal() {
 
     setLoading(true);
     try {
-      await changePassword(authStore.user!.id, newPassword);
+      await changePassword(authStore.user!.id, newPassword, currentPassword);
       authStore.setDefaultPassword(false);
       notify.addNotification({ type: 'success', title: 'Senha alterada com sucesso' });
     } catch (err: any) {

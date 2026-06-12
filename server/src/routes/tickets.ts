@@ -38,13 +38,38 @@ router.use(authMiddleware);
 // GET /api/tickets — list tickets with optional filters
 router.get('/', requireRole('reception', 'dispenser', 'admin', 'management', 'display'), async (req, res) => {
   try {
-    const areaId = req.query.areaId ? parseInt(String(req.query.areaId), 10) : undefined;
-    const stationId = req.query.stationId ? parseInt(String(req.query.stationId), 10) : undefined;
+    let areaId = req.query.areaId ? parseInt(String(req.query.areaId), 10) : undefined;
+    let stationId = req.query.stationId ? parseInt(String(req.query.stationId), 10) : undefined;
     const status = req.query.status as string | undefined;
-    const date = req.query.date as string | undefined;
+    let date = req.query.date as string | undefined;
 
-    const tickets = await ticketService.listTickets(areaId, status as any, date, stationId);
-    res.json(tickets);
+    if (req.auth!.role === 'reception') {
+      if (!req.auth!.areaId || !req.auth!.stationId) {
+        return res.status(403).json({ error: 'No area or station assigned' });
+      }
+      if (areaId && areaId !== req.auth!.areaId) {
+        return res.status(403).json({ error: 'You are not authorized for this area' });
+      }
+      if (stationId && stationId !== req.auth!.stationId) {
+        return res.status(403).json({ error: 'You are not authorized for this station' });
+      }
+      areaId = req.auth!.areaId;
+      stationId = status === 'waiting' ? undefined : req.auth!.stationId;
+      if (status === 'waiting' && !date) {
+        date = 'today';
+      }
+    }
+
+    let rows = await ticketService.listTickets(areaId, status as any, date, stationId);
+
+    if (req.auth!.role === 'reception') {
+      rows = rows.filter((ticket) => {
+        if (ticket.status === 'waiting') return true;
+        return ticket.stationId === req.auth!.stationId && ticket.userId === req.auth!.userId;
+      });
+    }
+
+    res.json(rows);
   } catch (error) {
     if (isAppError(error)) return res.status(error.statusCode).json({ error: error.message });
     logger.error('List tickets error', { module: 'tickets', error });
@@ -58,8 +83,11 @@ router.get('/active/:stationId', requireRole('reception'), async (req, res) => {
     const stationId = parseInt(String(req.params.stationId), 10);
     const areaId = req.auth!.areaId;
     if (!areaId) return res.status(403).json({ error: 'No area assigned' });
+    if (req.auth!.stationId !== stationId) {
+      return res.status(403).json({ error: 'You are not authorized for this station' });
+    }
 
-    const ticket = await ticketService.getActiveTicketForStation(areaId, stationId);
+    const ticket = await ticketService.getActiveTicketForStation(areaId, stationId, req.auth!.userId);
     res.json({ ticket: ticket || null });
   } catch (error) {
     if (isAppError(error)) return res.status(error.statusCode).json({ error: error.message });
@@ -98,7 +126,7 @@ router.post('/', requireRole('reception', 'dispenser'), async (req, res) => {
 
     // Update queue count
     const waitingCount = await ticketService.getWaitingCount(data.areaId);
-    const nextTickets = await ticketService.listTickets(data.areaId, 'waiting');
+    const nextTickets = await ticketService.listTickets(data.areaId, 'waiting', 'today');
     broadcastToArea(io, data.areaId, 'queue:updated', {
       waitingCount,
       nextTickets: nextTickets.slice(0, 8).map(t => ({
@@ -134,7 +162,7 @@ router.post('/call-next', requireRole('reception'), async (req, res) => {
       return res.status(403).json({ error: 'You are not authorized for this station' });
     }
 
-    const result = await ticketService.callNext(data.areaId, data.stationId);
+    const result = await ticketService.callNext(data.areaId, data.stationId, req.auth!.userId);
 
     const voiceConfig = await voiceConfigService.getVoiceConfig(data.areaId);
     const voiceText = buildVoiceText(voiceConfig.voiceTextTemplate || '', result.ticket.number, result.stationName);
@@ -142,9 +170,7 @@ router.post('/call-next', requireRole('reception'), async (req, res) => {
     // Broadcast to area room
     broadcastToArea(io, data.areaId, 'ticket:called', {
       ticket: {
-        id: result.ticket.id,
-        number: result.ticket.number,
-        stationId: data.stationId,
+        ...result.ticket,
         stationName: result.stationName,
       },
       voiceText,
@@ -152,7 +178,7 @@ router.post('/call-next', requireRole('reception'), async (req, res) => {
 
     // Update queue
     const waitingCount = await ticketService.getWaitingCount(data.areaId);
-    const nextTickets = await ticketService.listTickets(data.areaId, 'waiting');
+    const nextTickets = await ticketService.listTickets(data.areaId, 'waiting', 'today');
     broadcastToArea(io, data.areaId, 'queue:updated', {
       waitingCount,
       nextTickets: nextTickets.slice(0, 8).map(t => ({
@@ -165,11 +191,10 @@ router.post('/call-next', requireRole('reception'), async (req, res) => {
 
     res.json({
       ticket: {
-        id: result.ticket.id,
-        number: result.ticket.number,
-        status: result.ticket.status,
-        calledAt: result.ticket.calledAt,
+        ...result.ticket,
+        stationName: result.stationName,
       },
+      stationName: result.stationName,
     });
   } catch (error) {
     if (error instanceof z.ZodError) return res.status(400).json({ error: 'Validation failed', details: error.errors });
@@ -183,7 +208,10 @@ router.post('/call-next', requireRole('reception'), async (req, res) => {
 router.patch('/:id/start', requireRole('reception'), async (req, res) => {
   try {
     const ticketId = parseInt(String(req.params.id), 10);
-    const ticket = await ticketService.startService(ticketId);
+    const stationId = req.auth!.stationId;
+    if (!stationId) return res.status(403).json({ error: 'No station assigned' });
+
+    const ticket = await ticketService.startService(ticketId, stationId, req.auth!.userId);
 
     if (ticket) {
       broadcastToArea(io, ticket.areaId, 'ticket:started', {
@@ -204,7 +232,10 @@ router.patch('/:id/start', requireRole('reception'), async (req, res) => {
 router.patch('/:id/complete', requireRole('reception'), async (req, res) => {
   try {
     const ticketId = parseInt(String(req.params.id), 10);
-    const ticket = await ticketService.completeService(ticketId);
+    const stationId = req.auth!.stationId;
+    if (!stationId) return res.status(403).json({ error: 'No station assigned' });
+
+    const ticket = await ticketService.completeService(ticketId, stationId, req.auth!.userId);
 
     if (ticket) {
       broadcastToArea(io, ticket.areaId, 'ticket:completed', {
@@ -232,7 +263,7 @@ router.patch('/:id/cancel', requireRole('reception'), async (req, res) => {
       });
 
       const waitingCount = await ticketService.getWaitingCount(ticket.areaId);
-      const nextTickets = await ticketService.listTickets(ticket.areaId, 'waiting');
+      const nextTickets = await ticketService.listTickets(ticket.areaId, 'waiting', 'today');
       broadcastToArea(io, ticket.areaId, 'queue:updated', {
         waitingCount,
         nextTickets: nextTickets.slice(0, 8).map(t => ({
@@ -252,11 +283,47 @@ router.patch('/:id/cancel', requireRole('reception'), async (req, res) => {
   }
 });
 
+// DELETE /api/tickets/:id — permanently delete ticket (admin)
+router.delete('/:id', requireRole('admin', 'management'), async (req, res) => {
+  try {
+    const ticketId = parseInt(String(req.params.id), 10);
+    const ticket = await ticketService.deleteTicket(ticketId);
+
+    if (ticket) {
+      // Broadcast as cancelled so clients remove it from views
+      broadcastToArea(io, ticket.areaId, 'ticket:cancelled', {
+        ticketId: ticket.id,
+      });
+
+      const waitingCount = await ticketService.getWaitingCount(ticket.areaId);
+      const nextTickets = await ticketService.listTickets(ticket.areaId, 'waiting', 'today');
+      broadcastToArea(io, ticket.areaId, 'queue:updated', {
+        waitingCount,
+        nextTickets: nextTickets.slice(0, 8).map(t => ({
+          id: t.id,
+          number: t.number,
+          serviceName: t.serviceName || '',
+          createdAt: t.createdAt,
+        })),
+      });
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    if (isAppError(error)) return res.status(error.statusCode).json({ error: error.message });
+    logger.error('Delete ticket error', { module: 'tickets', error });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // PATCH /api/tickets/:id/no-show — mark as no-show (called not answered)
 router.patch('/:id/no-show', requireRole('reception'), async (req, res) => {
   try {
     const ticketId = parseInt(String(req.params.id), 10);
-    const ticket = await ticketService.markNoShow(ticketId);
+    const stationId = req.auth!.stationId;
+    if (!stationId) return res.status(403).json({ error: 'No station assigned' });
+
+    const ticket = await ticketService.markNoShow(ticketId, stationId, req.auth!.userId);
 
     if (ticket) {
       broadcastToArea(io, ticket.areaId, 'ticket:cancelled', {
@@ -264,7 +331,7 @@ router.patch('/:id/no-show', requireRole('reception'), async (req, res) => {
       });
 
       const waitingCount = await ticketService.getWaitingCount(ticket.areaId);
-      const nextTickets = await ticketService.listTickets(ticket.areaId, 'waiting');
+      const nextTickets = await ticketService.listTickets(ticket.areaId, 'waiting', 'today');
       broadcastToArea(io, ticket.areaId, 'queue:updated', {
         waitingCount,
         nextTickets: nextTickets.slice(0, 8).map(t => ({
@@ -288,7 +355,10 @@ router.patch('/:id/no-show', requireRole('reception'), async (req, res) => {
 router.patch('/:id/recall', requireRole('reception'), async (req, res) => {
   try {
     const ticketId = parseInt(String(req.params.id), 10);
-    const ticket = await ticketService.recallTicket(ticketId);
+    const stationId = req.auth!.stationId;
+    if (!stationId) return res.status(403).json({ error: 'No station assigned' });
+
+    const ticket = await ticketService.recallTicket(ticketId, stationId, req.auth!.userId);
 
     if (ticket) {
       const voiceConfig = await voiceConfigService.getVoiceConfig(ticket.areaId);
@@ -298,16 +368,14 @@ router.patch('/:id/recall', requireRole('reception'), async (req, res) => {
 
       broadcastToArea(io, ticket.areaId, 'ticket:called', {
         ticket: {
-          id: ticket.id,
-          number: ticket.number,
-          stationId: ticket.stationId,
+          ...ticket,
           stationName: stationName,
         },
         voiceText,
       });
 
       const waitingCount = await ticketService.getWaitingCount(ticket.areaId);
-      const nextTickets = await ticketService.listTickets(ticket.areaId, 'waiting');
+      const nextTickets = await ticketService.listTickets(ticket.areaId, 'waiting', 'today');
       broadcastToArea(io, ticket.areaId, 'queue:updated', {
         waitingCount,
         nextTickets: nextTickets.slice(0, 8).map(t => ({

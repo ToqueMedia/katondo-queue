@@ -6,3 +6,6 @@ server/uploads/
 client/dist/
 .DS_Store
 *.tsbuildinfo
+android/display/keystore.properties
+android/display/app/build/
+android/display/.gradle/

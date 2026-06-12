@@ -16,6 +16,10 @@ client/dist/
 .env.*
 *.pem
 *.key
+*.jks
+*.keystore
+keystore.properties
+android/
 
 # Logs and OS files
 *.log

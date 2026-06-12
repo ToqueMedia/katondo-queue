@@ -425,7 +425,7 @@ private fun VideoPlayer(
                 PlayerView(ctx).apply {
                     this.player = player
                     useController = false
-                    resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                    resizeMode = androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT
                     setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
                 }
             },
@@ -669,7 +669,9 @@ private fun DisplayFooter(
             .padding(vertical = 12.dp)
             .clipToBounds()
     ) {
-        FooterTicker(text = tickerText)
+        androidx.compose.runtime.key(tickerText) {
+            FooterTicker(text = tickerText)
+        }
     }
 }
 
@@ -716,8 +718,10 @@ private fun FooterTicker(
             fontWeight = FontWeight.Medium,
             color = Color.White.copy(alpha = 0.65f),
             maxLines = 1,
+            softWrap = false,
             modifier = Modifier
                 .offset(x = with(LocalDensity.current) { offsetX.toDp() })
+                .wrapContentWidth(unbounded = true, align = Alignment.Start)
                 .onSizeChanged { size ->
                     textWidth = size.width.toFloat()
                 }
@@ -763,8 +767,8 @@ private fun ConnectionErrorOverlay(
     initialPort: String,
     onReconnect: (String, String) -> Unit
 ) {
-    var host by remember { mutableStateOf(initialHost) }
-    var port by remember { mutableStateOf(initialPort) }
+    var host by remember { mutableStateOf(if (initialHost.isBlank()) "http://10.245.80.114" else initialHost) }
+    var port by remember { mutableStateOf(if (initialPort.isBlank()) "80" else initialPort) }
 
     Box(
         modifier = Modifier

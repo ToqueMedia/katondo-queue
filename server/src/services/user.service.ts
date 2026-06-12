@@ -2,7 +2,7 @@
 
 import { eq } from 'drizzle-orm';
 import { db } from '../db/connection.js';
-import { users } from '../db/schema.js';
+import { stations, users } from '../db/schema.js';
 import { hashPassword } from './auth.service.js';
 import { ConflictError, ForbiddenError, ValidationError, NotFoundError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
@@ -11,8 +11,8 @@ import type { UserRole } from '../types/index.js';
 // Roles that admin can create
 const ADMIN_CREATABLE_ROLES: UserRole[] = ['reception', 'management', 'display', 'dispenser'];
 
-// Roles that require areaId
-const AREA_REQUIRED_ROLES: UserRole[] = ['reception', 'display', 'dispenser'];
+// Roles that require areaId (receptionist is now mobile so area is not required at creation!)
+const AREA_REQUIRED_ROLES: UserRole[] = ['display', 'dispenser'];
 
 export async function createUser(
   username: string,
@@ -21,6 +21,7 @@ export async function createUser(
   areaId: number | null,
   stationId: number | null,
   createdBy: number,
+  name?: string,
 ) {
   // Check if username already exists
   const existing = await db.query.users.findFirst({
@@ -55,6 +56,7 @@ export async function createUser(
     areaId: areaId ?? undefined,
     stationId: stationId ?? undefined,
     createdBy,
+    name: name || undefined,
   });
 
   // MySQL doesn't support RETURNING — query after insert
@@ -62,7 +64,7 @@ export async function createUser(
     where: eq(users.username, username),
     columns: {
       id: true, username: true, role: true, areaId: true, stationId: true,
-      active: true, createdBy: true, createdAt: true, updatedAt: true,
+      active: true, createdBy: true, createdAt: true, updatedAt: true, name: true,
       passwordHash: true,
     },
   });
@@ -86,6 +88,7 @@ export async function listUsers(includeInactive = false) {
       createdBy: true,
       createdAt: true,
       updatedAt: true,
+      name: true,
     },
     orderBy: (users, { asc }) => [asc(users.id)],
   });
@@ -104,6 +107,7 @@ export async function getUserById(id: number) {
       createdBy: true,
       createdAt: true,
       updatedAt: true,
+      name: true,
     },
   });
 
@@ -122,6 +126,7 @@ export async function updateUser(
     areaId?: number | null;
     stationId?: number | null;
     active?: boolean;
+    name?: string | null;
   },
 ) {
   // Check user exists
@@ -132,9 +137,11 @@ export async function updateUser(
     throw new ForbiddenError('Root user cannot be deactivated');
   }
 
-  // Validate areaId if role changes
-  if (updates.role && AREA_REQUIRED_ROLES.includes(updates.role) && updates.areaId === null && existing.areaId === null) {
-    throw new ValidationError(`Area is required for '${updates.role}' users`);
+  const nextRole = updates.role ?? existing.role;
+  const nextAreaId = updates.areaId !== undefined ? updates.areaId : existing.areaId;
+
+  if (AREA_REQUIRED_ROLES.includes(nextRole as UserRole) && nextAreaId === null) {
+    throw new ValidationError(`Area is required for '${nextRole}' users`);
   }
 
   // Check username uniqueness if changing
@@ -170,6 +177,11 @@ export async function deleteUser(id: number) {
     throw new ForbiddenError('Root user cannot be deleted');
   }
 
+  await db
+    .update(stations)
+    .set({ receptionUserId: null })
+    .where(eq(stations.receptionUserId, id));
+
   await db.delete(users).where(eq(users.id, id));
 
   logger.info('User deleted', { module: 'user', userId: id });
@@ -186,10 +198,39 @@ export async function changePassword(userId: number, newPassword: string) {
   logger.info('Password changed', { module: 'user', userId });
 }
 
+export async function setActiveStation(userId: number, areaId: number | null, stationId: number | null) {
+  await getUserById(userId);
+
+  await db
+    .update(stations)
+    .set({ receptionUserId: null })
+    .where(eq(stations.receptionUserId, userId));
+
+  if (stationId !== null) {
+    await db
+      .update(stations)
+      .set({ receptionUserId: userId })
+      .where(eq(stations.id, stationId));
+  }
+
+  await db
+    .update(users)
+    .set({ areaId, stationId, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+
+  logger.info('Active station updated', { module: 'user', userId, areaId, stationId });
+
+  return getUserById(userId);
+}
+
 export function canCreateRole(creatorRole: UserRole, targetRole: UserRole): boolean {
   if (creatorRole === 'root') return targetRole === 'admin';
   if (creatorRole === 'admin') return ADMIN_CREATABLE_ROLES.includes(targetRole);
   return false;
+}
+
+export function canAdminManageRole(targetRole: UserRole): boolean {
+  return ADMIN_CREATABLE_ROLES.includes(targetRole);
 }
 
 export { ADMIN_CREATABLE_ROLES, AREA_REQUIRED_ROLES };

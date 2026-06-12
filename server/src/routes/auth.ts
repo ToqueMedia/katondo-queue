@@ -3,6 +3,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import * as authService from '../services/auth.service.js';
+import * as userService from '../services/user.service.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { isAppError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
@@ -56,9 +57,16 @@ router.post('/refresh', async (req, res) => {
 });
 
 // POST /api/auth/logout
-router.post('/logout', authMiddleware, (_req, res) => {
-  // JWT is stateless — logout is handled client-side (delete tokens)
-  res.json({ message: 'Logged out successfully' });
+router.post('/logout', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth) {
+      await userService.setActiveStation(req.auth.userId, null, null);
+    }
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    logger.error('Logout error', { module: 'auth', error });
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export default router;

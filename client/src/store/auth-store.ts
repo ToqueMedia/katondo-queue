@@ -13,6 +13,7 @@ interface AuthState {
   logout: () => void;
   setDefaultPassword: (value: boolean) => void;
   updateToken: (token: string, refreshToken: string) => void;
+  updateUserActiveStation: (areaId: number, stationId: number) => void;
 }
 
 const savedUser = localStorage.getItem('user');
@@ -48,5 +49,14 @@ export const useAuthStore = create<AuthState>((set) => ({
     localStorage.setItem('token', token);
     localStorage.setItem('refreshToken', refreshToken);
     set({ token, refreshToken });
+  },
+
+  updateUserActiveStation: (areaId, stationId) => {
+    set((state) => {
+      if (!state.user) return state;
+      const updatedUser = { ...state.user, areaId, stationId };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      return { user: updatedUser };
+    });
   },
 }));

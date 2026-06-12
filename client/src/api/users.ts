@@ -1,7 +1,7 @@
 // Users API calls
 
 import apiClient from './client';
-import type { UserRow } from '../types/index';
+import type { UserRole, UserRow } from '../types/index';
 
 export interface CreateUserPayload {
   username: string;
@@ -9,14 +9,16 @@ export interface CreateUserPayload {
   role: string;
   areaId?: number | null;
   stationId?: number | null;
+  name?: string | null;
 }
 
 export interface UpdateUserPayload {
   username?: string;
-  role?: string;
+  role?: UserRole;
   areaId?: number | null;
   stationId?: number | null;
   active?: boolean;
+  name?: string | null;
 }
 
 export async function getUsers(role?: string): Promise<UserRow[]> {
@@ -33,6 +35,17 @@ export async function listUsers(roleOrAll?: string | boolean): Promise<UserRow[]
   return getUsers(role);
 }
 
+export interface ActiveStationResponse {
+  user: UserRow;
+  token: string;
+  refreshToken: string;
+}
+
+export async function updateActiveStation(areaId: number | null, stationId: number | null): Promise<ActiveStationResponse> {
+  const { data } = await apiClient.patch<ActiveStationResponse>('/users/active-station', { areaId, stationId });
+  return data;
+}
+
 export async function getUserById(id: number): Promise<UserRow> {
   const { data } = await apiClient.get<UserRow>(`/users/${id}`);
   return data;
@@ -44,6 +57,7 @@ export async function createUser(
   role: string,
   areaId?: number | null,
   stationId?: number | null,
+  name?: string | null,
 ): Promise<UserRow> {
   const { data } = await apiClient.post<UserRow>('/users', {
     username,
@@ -51,6 +65,7 @@ export async function createUser(
     role,
     areaId: areaId ?? null,
     stationId: stationId ?? null,
+    name: name ?? null,
     firstLogin: true,
   });
   return data;
@@ -69,7 +84,7 @@ export async function resetUserPassword(id: number, newPassword: string): Promis
   await apiClient.patch(`/users/${id}/password`, { newPassword });
 }
 
-// Pages call changePassword(userId, newPassword)
-export async function changePassword(id: number, newPassword: string): Promise<void> {
-  await apiClient.patch(`/users/${id}/password`, { newPassword });
+// Pages call changePassword(userId, newPassword, currentPassword?)
+export async function changePassword(id: number, newPassword: string, currentPassword?: string): Promise<void> {
+  await apiClient.patch(`/users/${id}/password`, { newPassword, currentPassword });
 }

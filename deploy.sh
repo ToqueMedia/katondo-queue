@@ -34,19 +34,24 @@ ENV_FILE="$DEPLOY_DIR/.env"
 
 # ── Helpers ────────────────────────────────────────────────────
 ssh_run() {
-    ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" "$@"
+    sshpass -p 'qwerty1234' ssh -p "$SSH_PORT" -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" "$@"
 }
 
 scp_file() {
-    scp -P "$SSH_PORT" "$@"
+    sshpass -p 'qwerty1234' scp -P "$SSH_PORT" -o StrictHostKeyChecking=no "$@"
 }
 
 rsync_push() {
-    rsync -avz --progress -e "ssh -p $SSH_PORT" \
+    rsync -avz --progress -e "sshpass -p 'qwerty1234' ssh -p $SSH_PORT -o StrictHostKeyChecking=no" \
         --exclude='node_modules/' \
         --exclude='.git/' \
         --exclude='client/node_modules/' \
         --exclude='server/node_modules/' \
+        --exclude='android/' \
+        --exclude='.gradle/' \
+        --exclude='keystore.properties' \
+        --exclude='*.jks' \
+        --exclude='*.keystore' \
         --exclude='dist/' \
         --exclude='.env' \
         --exclude='*.log' \
@@ -116,9 +121,12 @@ ENVEOF
 init_mysql() {
     info "A inicializar MySQL (criar DB + schema)..."
 
+    # Ensure MySQL container is started
+    ssh_run "cd $DEPLOY_DIR && docker compose up -d mysql"
+
     # Get MySQL password from .env
     local MYSQL_PW
-    MYSQL_PW=$(ssh_run "grep MYSQL_ROOT_PASSWORD $ENV_FILE | cut -d= -f2")
+    MYSQL_PW=$(ssh_run "grep "MYSQL_ROOT_PASSWORD" $ENV_FILE | cut -d= -f2")
 
     # Wait for MySQL to be ready
     info "A aguardar MySQL iniciar (até 60s)..."
@@ -147,10 +155,10 @@ deploy() {
     ssh_run "cd $DEPLOY_DIR && docker compose build --no-cache"
     ssh_run "cd $DEPLOY_DIR && docker compose up -d"
 
-    # Wait for app health
+    # Wait for app health (proxied via Nginx port 80 to host)
     info "A aguardar aplicação ficar pronta..."
     local retries=30
-    until ssh_run "curl -sf http://localhost:3001/api/health >/dev/null" 2>/dev/null; do
+    until ssh_run "curl -sf http://localhost/api/health >/dev/null" 2>/dev/null; do
         ((retries--))
         if [ $retries -eq 0 ]; then
             error "Aplicação não respondeu a tempo"

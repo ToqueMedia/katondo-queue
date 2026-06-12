@@ -66,7 +66,7 @@ export function useSocket(areaId: number | null) {
       const user = userJson ? JSON.parse(userJson) : null;
       if (user && user.role === 'reception' && user.stationId) {
         try {
-          const tickets = await listTickets(areaId, 'waiting', undefined, user.stationId);
+          const tickets = await listTickets(areaId, 'waiting', 'today');
           queueStore.setWaitingCount(tickets.length);
           queueStore.setNextTickets(tickets);
           const isOurService = tickets.some(t => t.id === payload.ticket.id);
@@ -90,7 +90,7 @@ export function useSocket(areaId: number | null) {
           queueStore.setCurrentTicket(payload.ticket, payload.voiceText);
         }
         try {
-          const tickets = await listTickets(areaId, 'waiting', undefined, user.stationId);
+          const tickets = await listTickets(areaId, 'waiting', 'today');
           queueStore.setWaitingCount(tickets.length);
           queueStore.setNextTickets(tickets);
         } catch (err) {
@@ -117,7 +117,7 @@ export function useSocket(areaId: number | null) {
       const user = userJson ? JSON.parse(userJson) : null;
       if (user && user.role === 'reception' && user.stationId) {
         try {
-          const tickets = await listTickets(areaId, 'waiting', undefined, user.stationId);
+          const tickets = await listTickets(areaId, 'waiting', 'today');
           queueStore.setWaitingCount(tickets.length);
           queueStore.setNextTickets(tickets);
         } catch (err) {
@@ -133,7 +133,7 @@ export function useSocket(areaId: number | null) {
       const user = userJson ? JSON.parse(userJson) : null;
       if (user && user.role === 'reception' && user.stationId) {
         try {
-          const tickets = await listTickets(areaId, 'waiting', undefined, user.stationId);
+          const tickets = await listTickets(areaId, 'waiting', 'today');
           queueStore.setWaitingCount(tickets.length);
           queueStore.setNextTickets(tickets);
         } catch (err) {

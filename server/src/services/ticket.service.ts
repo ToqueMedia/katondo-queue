@@ -1,15 +1,25 @@
 // Ticket service — emit, call-next, transitions with MySQL transaction locking + station services & priority interleaving
 
-import { eq, and, sql, inArray } from 'drizzle-orm';
+import { eq, and, sql, inArray, asc, or } from 'drizzle-orm';
 import { db } from '../db/connection.js';
 import { tickets, dailySequences, services, stations, stationServices } from '../db/schema.js';
 import { formatTicketNumber } from '../utils/ticket-format.js';
 import { getToday } from '../utils/date.js';
-import { NotFoundError, ValidationError } from '../utils/errors.js';
+import { ForbiddenError, NotFoundError, ValidationError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 import type { TicketStatus } from '../types/index.js';
 
 type TicketWithServiceName = typeof tickets.$inferSelect & { serviceName: string; stationName?: string };
+
+function assertTicketAssignedToOperator(
+  ticket: typeof tickets.$inferSelect,
+  stationId: number,
+  userId: number,
+) {
+  if (ticket.stationId !== stationId || ticket.userId !== userId) {
+    throw new ForbiddenError('Esta senha pertence a outro operador ou estação.');
+  }
+}
 
 // Emit a new ticket — uses transaction with row-level lock on DailySequence + priority interleaving
 export async function emitTicket(serviceId: number, areaId: number) {
@@ -119,59 +129,63 @@ export async function emitTicket(serviceId: number, areaId: number) {
   });
 }
 
-// Call next ticket for an area — oldest waiting ticket (filtered by station services)
-export async function callNext(areaId: number, stationId: number) {
+// Call next ticket for an area — oldest waiting ticket in today's area queue
+export async function callNext(areaId: number, stationId: number, userId: number) {
   const today = getToday();
 
   return await db.transaction(async (tx) => {
-    // Validate station has no active ticket (called or in_service)
+    // Validate station/operator has no active ticket (called or in_service)
     const activeCalled = await tx.query.tickets.findFirst({
       where: and(
-        eq(tickets.areaId, areaId),
-        eq(tickets.stationId, stationId),
+        or(eq(tickets.stationId, stationId), eq(tickets.userId, userId)),
         sql`${tickets.date} = ${today}`,
         sql`${tickets.status} IN ('called', 'in_service')`,
       ),
     });
 
     if (activeCalled) {
-      throw new ValidationError('Estação já possui uma senha activa. Conclua ou descarte a actual antes de chamar a próxima.');
+      throw new ValidationError('Esta estação ou operador já possui uma senha activa. Conclua ou descarte a actual antes de chamar a próxima.');
     }
 
-    // Get assigned services for this station
-    const assignedServices = await tx.query.stationServices.findMany({
-      where: eq(stationServices.stationId, stationId),
-    });
-    const serviceIds = assignedServices.map((s) => s.serviceId);
-
-    if (serviceIds.length === 0) {
-      throw new ValidationError('Esta estação não possui nenhum serviço atribuído.');
-    }
-
-    // Find oldest waiting ticket
-    const nextTicket = await tx.query.tickets.findFirst({
-      where: and(
+    // Lock the selected waiting ticket so two stations cannot call the same row concurrently.
+    const [nextTicket] = await tx
+      .select()
+      .from(tickets)
+      .where(and(
         eq(tickets.areaId, areaId),
         eq(tickets.status, 'waiting'),
         sql`${tickets.date} = ${today}`,
-        inArray(tickets.serviceId, serviceIds),
-      ),
-      orderBy: (tickets, { asc }) => [asc(tickets.createdAt)],
-    });
+      ))
+      .orderBy(asc(tickets.createdAt), asc(tickets.id))
+      .limit(1)
+      .for('update');
 
     if (!nextTicket) {
       throw new NotFoundError('Não há senhas em espera para esta estação.');
     }
 
-    // Update to called and increment callCount
+    const activeAfterLock = await tx.query.tickets.findFirst({
+      where: and(
+        or(eq(tickets.stationId, stationId), eq(tickets.userId, userId)),
+        sql`${tickets.date} = ${today}`,
+        sql`${tickets.status} IN ('called', 'in_service')`,
+      ),
+    });
+
+    if (activeAfterLock) {
+      throw new ValidationError('Esta estação ou operador já possui uma senha activa. Conclua ou descarte a actual antes de chamar a próxima.');
+    }
+
+    // Update to called, associate receptionist userId, and increment callCount
     await tx.update(tickets)
       .set({
         status: 'called',
         stationId,
+        userId,
         calledAt: new Date(),
         callCount: sql`${tickets.callCount} + 1`,
       })
-      .where(eq(tickets.id, nextTicket.id));
+      .where(and(eq(tickets.id, nextTicket.id), eq(tickets.status, 'waiting')));
 
     // Get station name
     const station = await tx.query.stations.findFirst({
@@ -182,7 +196,7 @@ export async function callNext(areaId: number, stationId: number) {
       where: eq(tickets.id, nextTicket.id),
     });
 
-    logger.info('Ticket called', { module: 'ticket', ticketId: updated!.id, stationId });
+    logger.info('Ticket called', { module: 'ticket', ticketId: updated!.id, stationId, userId });
 
     return {
       ticket: updated!,
@@ -192,7 +206,7 @@ export async function callNext(areaId: number, stationId: number) {
 }
 
 // Start service — called → in_service
-export async function startService(ticketId: number) {
+export async function startService(ticketId: number, stationId: number, userId: number) {
   const ticket = await db.query.tickets.findFirst({
     where: eq(tickets.id, ticketId),
   });
@@ -204,6 +218,8 @@ export async function startService(ticketId: number) {
   if (ticket.status !== 'called') {
     throw new ValidationError(`Ticket status is ${ticket.status}, expected 'called'`);
   }
+
+  assertTicketAssignedToOperator(ticket, stationId, userId);
 
   await db.update(tickets)
     .set({ status: 'in_service', startedAt: new Date() })
@@ -217,7 +233,7 @@ export async function startService(ticketId: number) {
 }
 
 // Complete service — in_service → completed
-export async function completeService(ticketId: number) {
+export async function completeService(ticketId: number, stationId: number, userId: number) {
   const ticket = await db.query.tickets.findFirst({
     where: eq(tickets.id, ticketId),
   });
@@ -229,6 +245,8 @@ export async function completeService(ticketId: number) {
   if (ticket.status !== 'in_service') {
     throw new ValidationError(`Ticket status is ${ticket.status}, expected 'in_service'`);
   }
+
+  assertTicketAssignedToOperator(ticket, stationId, userId);
 
   await db.update(tickets)
     .set({ status: 'completed', completedAt: new Date() })
@@ -264,8 +282,25 @@ export async function cancelTicket(ticketId: number) {
   return ticket;
 }
 
+// Delete ticket entirely (Admin/Mgmt operation)
+export async function deleteTicket(ticketId: number) {
+  const ticket = await db.query.tickets.findFirst({
+    where: eq(tickets.id, ticketId),
+  });
+
+  if (!ticket) {
+    throw new NotFoundError(`Ticket ${ticketId} not found`);
+  }
+
+  await db.delete(tickets).where(eq(tickets.id, ticketId));
+  
+  logger.info('Ticket deleted', { module: 'ticket', ticketId });
+
+  return ticket;
+}
+
 // Mark no-show — called/no_show → no_show (called not answered)
-export async function markNoShow(ticketId: number) {
+export async function markNoShow(ticketId: number, stationId: number, userId: number) {
   const ticket = await db.query.tickets.findFirst({
     where: eq(tickets.id, ticketId),
   });
@@ -277,6 +312,8 @@ export async function markNoShow(ticketId: number) {
   if (!['called', 'no_show'].includes(ticket.status)) {
     throw new ValidationError(`Ticket status is ${ticket.status}, expected 'called' or 'no_show'`);
   }
+
+  assertTicketAssignedToOperator(ticket, stationId, userId);
 
   if (ticket.callCount >= 2 && ticket.status === 'no_show') {
     throw new ValidationError('Esta senha já foi descartada');
@@ -292,7 +329,7 @@ export async function markNoShow(ticketId: number) {
 }
 
 // Recall ticket — called → called (increment callCount, max 2)
-export async function recallTicket(ticketId: number) {
+export async function recallTicket(ticketId: number, stationId: number, userId: number) {
   const ticket = await db.query.tickets.findFirst({
     where: eq(tickets.id, ticketId),
   });
@@ -304,6 +341,8 @@ export async function recallTicket(ticketId: number) {
   if (ticket.status !== 'called') {
     throw new ValidationError(`Ticket status is ${ticket.status}, expected 'called'`);
   }
+
+  assertTicketAssignedToOperator(ticket, stationId, userId);
 
   if (ticket.callCount >= 2) {
     throw new ValidationError('Limite de chamadas atingido (2). Descartar ou iniciar atendimento.');
@@ -332,7 +371,13 @@ export async function listTickets(
   const conditions = [];
   if (areaId) conditions.push(eq(tickets.areaId, areaId));
   if (status) conditions.push(eq(tickets.status, status));
-  if (date) conditions.push(sql`${tickets.date} = ${date}`);
+
+  if (date) {
+    const targetDate = date === 'today'
+      ? new Date().toLocaleDateString('sv', { timeZone: 'Africa/Luanda' })
+      : date;
+    conditions.push(sql`${tickets.date} = ${targetDate}`);
+  }
 
   if (stationId) {
     const assignedServices = await db.query.stationServices.findMany({
@@ -433,14 +478,39 @@ export async function getWaitingCount(areaId: number, date?: string, stationId?:
 }
 
 // Get active ticket for a station (called or in_service)
-export async function getActiveTicketForStation(areaId: number, stationId: number) {
+export async function getActiveTicketForStation(areaId: number, stationId: number, userId: number) {
   const today = getToday();
   return db.query.tickets.findFirst({
     where: and(
       eq(tickets.areaId, areaId),
       eq(tickets.stationId, stationId),
+      eq(tickets.userId, userId),
       sql`${tickets.status} IN ('called', 'in_service')`,
       sql`${tickets.date} = ${today}`,
+    ),
+    orderBy: (tickets, { desc }) => [desc(tickets.calledAt)],
+  });
+}
+
+export async function getActiveTicketForUser(userId: number, date?: string) {
+  const targetDate = date || getToday();
+  return db.query.tickets.findFirst({
+    where: and(
+      eq(tickets.userId, userId),
+      sql`${tickets.status} IN ('called', 'in_service')`,
+      sql`${tickets.date} = ${targetDate}`,
+    ),
+    orderBy: (tickets, { desc }) => [desc(tickets.calledAt)],
+  });
+}
+
+export async function getActiveTicketForStationAnyUser(stationId: number, date?: string) {
+  const targetDate = date || getToday();
+  return db.query.tickets.findFirst({
+    where: and(
+      eq(tickets.stationId, stationId),
+      sql`${tickets.status} IN ('called', 'in_service')`,
+      sql`${tickets.date} = ${targetDate}`,
     ),
     orderBy: (tickets, { desc }) => [desc(tickets.calledAt)],
   });

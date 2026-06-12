@@ -3,8 +3,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import * as userService from '../services/user.service.js';
+import * as authService from '../services/auth.service.js';
+import * as stationService from '../services/station.service.js';
+import * as ticketService from '../services/ticket.service.js';
 import { authMiddleware, requireRole } from '../middleware/auth.js';
-import { isAppError, ForbiddenError } from '../utils/errors.js';
+import { isAppError, ConflictError, ForbiddenError, ValidationError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 import type { UserRole } from '../types/index.js';
 
@@ -16,6 +19,7 @@ const createUserSchema = z.object({
   role: z.enum(['root', 'admin', 'reception', 'management', 'display', 'dispenser']),
   areaId: z.number().int().nullable().optional(),
   stationId: z.number().int().nullable().optional(),
+  name: z.string().nullable().optional(),
 });
 
 const updateUserSchema = z.object({
@@ -24,9 +28,11 @@ const updateUserSchema = z.object({
   areaId: z.number().int().nullable().optional(),
   stationId: z.number().int().nullable().optional(),
   active: z.boolean().optional(),
+  name: z.string().nullable().optional(),
 });
 
 const changePasswordSchema = z.object({
+  currentPassword: z.string().optional(),
   newPassword: z.string().min(6, 'New password must be at least 6 characters'),
 });
 
@@ -67,12 +73,14 @@ router.post('/', requireRole('root', 'admin'), async (req, res) => {
       data.areaId ?? null,
       data.stationId ?? null,
       req.auth!.userId,
+      data.name?.trim() || undefined,
     );
 
     // Return user without password hash
     res.status(201).json({
       id: result.id,
       username: result.username,
+      name: result.name,
       role: result.role,
       areaId: result.areaId,
       stationId: result.stationId,
@@ -92,12 +100,95 @@ router.post('/', requireRole('root', 'admin'), async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+// PATCH /api/users/active-station — let receptionist set their active area & station for the day
+router.patch('/active-station', requireRole('reception'), async (req, res) => {
+  try {
+    const activeStationSchema = z.object({
+      areaId: z.number().int().nullable(),
+      stationId: z.number().int().nullable(),
+    });
+    const data = activeStationSchema.parse(req.body);
+
+    const areaId = data.areaId && data.areaId > 0 ? data.areaId : null;
+    const stationId = data.stationId && data.stationId > 0 ? data.stationId : null;
+
+    const activeUserTicket = await ticketService.getActiveTicketForUser(req.auth!.userId);
+    if (activeUserTicket) {
+      throw new ConflictError('Conclua ou descarte a senha activa antes de trocar de posto.');
+    }
+
+    if ((areaId === null) !== (stationId === null)) {
+      throw new ValidationError('Área e estação devem ser informadas em conjunto.');
+    }
+
+    if (areaId !== null && stationId !== null) {
+      const station = await stationService.getStationById(stationId);
+      if (!station.active) {
+        throw new ValidationError('A estação seleccionada está inactiva.');
+      }
+      if (station.areaId !== areaId) {
+        throw new ValidationError('A estação seleccionada não pertence à área informada.');
+      }
+      if (station.receptionUserId && station.receptionUserId !== req.auth!.userId) {
+        throw new ConflictError('Esta estação já está ocupada por outro operador.');
+      }
+
+      const activeStationTicket = await ticketService.getActiveTicketForStationAnyUser(stationId);
+      if (activeStationTicket && activeStationTicket.userId !== req.auth!.userId) {
+        throw new ConflictError('Esta estação possui uma senha activa de outro operador.');
+      }
+    }
+
+    const result = await userService.setActiveStation(req.auth!.userId, areaId, stationId);
+
+    // Generate new JWT tokens with updated areaId and stationId claims!
+    const { token, refreshToken } = await authService.generateTokens(result);
+
+    res.json({
+      user: {
+        id: result.id,
+        username: result.username,
+        name: result.name,
+        role: result.role,
+        areaId: result.areaId,
+        stationId: result.stationId,
+        active: result.active,
+      },
+      token,
+      refreshToken
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    if (isAppError(error)) return res.status(error.statusCode).json({ error: error.message, code: error.code });
+    logger.error('Update active station error', { module: 'users', error });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 // PATCH /api/users/:id — update user
 router.patch('/:id', requireRole('root', 'admin'), async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
     const data = updateUserSchema.parse(req.body);
+    const actorRole = req.auth!.role as UserRole;
+    const existing = await userService.getUserById(id);
+    const targetRole = (data.role || existing.role) as UserRole;
+
+    if (existing.role === 'root') {
+      throw new ForbiddenError('Root user cannot be edited');
+    }
+
+    if (targetRole === 'root') {
+      throw new ForbiddenError('Users cannot be promoted to root');
+    }
+
+    if (actorRole === 'admin' && !userService.canAdminManageRole(existing.role as UserRole)) {
+      throw new ForbiddenError(`Your role '${actorRole}' cannot edit users with role '${existing.role}'`);
+    }
+
+    if (actorRole === 'admin' && !userService.canAdminManageRole(targetRole)) {
+      throw new ForbiddenError(`Your role '${actorRole}' cannot assign role '${targetRole}'`);
+    }
 
     const result = await userService.updateUser(id, {
       username: data.username,
@@ -105,11 +196,13 @@ router.patch('/:id', requireRole('root', 'admin'), async (req, res) => {
       areaId: data.areaId,
       stationId: data.stationId,
       active: data.active,
+      name: data.name,
     });
 
     res.json({
       id: result.id,
       username: result.username,
+      name: result.name,
       role: result.role,
       areaId: result.areaId,
       stationId: result.stationId,
@@ -134,6 +227,13 @@ router.patch('/:id', requireRole('root', 'admin'), async (req, res) => {
 router.delete('/:id', requireRole('root', 'admin'), async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
+    const actorRole = req.auth!.role as UserRole;
+    const target = await userService.getUserById(id);
+
+    if (actorRole === 'admin' && !userService.canAdminManageRole(target.role as UserRole)) {
+      throw new ForbiddenError(`Your role '${actorRole}' cannot delete users with role '${target.role}'`);
+    }
+
     await userService.deleteUser(id);
     res.json({ message: `User ${id} deleted successfully` });
   } catch (error) {
@@ -149,13 +249,26 @@ router.delete('/:id', requireRole('root', 'admin'), async (req, res) => {
 router.patch('/:id/password', async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
-    const { newPassword } = changePasswordSchema.parse(req.body);
+    const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
     const authUserId = req.auth!.userId;
     const authRole = req.auth!.role as UserRole;
+    const target = await userService.getUserById(id);
 
     // Only the user themselves, root, or admin can change password
     if (authUserId !== id && !['root', 'admin'].includes(authRole)) {
       throw new ForbiddenError('You can only change your own password');
+    }
+    if (authRole === 'admin' && authUserId !== id && !userService.canAdminManageRole(target.role as UserRole)) {
+      throw new ForbiddenError(`Your role '${authRole}' cannot change password for role '${target.role}'`);
+    }
+    if (authUserId === id) {
+      if (!currentPassword) {
+        throw new ValidationError('Senha actual é obrigatória');
+      }
+      const valid = await authService.verifyUserPassword(id, currentPassword);
+      if (!valid) {
+        throw new ForbiddenError('Senha actual incorrecta');
+      }
     }
 
     await userService.changePassword(id, newPassword);
