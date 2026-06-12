@@ -223,6 +223,48 @@ router.patch('/:id', requireRole('root', 'admin'), async (req, res) => {
   }
 });
 
+// POST /api/users/:id/release-station — force logout and release station
+router.post('/:id/release-station', requireRole('root', 'admin'), async (req, res) => {
+  try {
+    const id = parseInt(String(req.params.id), 10);
+    const actorRole = req.auth!.role as UserRole;
+    const target = await userService.getUserById(id);
+
+    if (target.role === 'root') {
+      throw new ForbiddenError('Root user station cannot be edited');
+    }
+
+    if (actorRole === 'admin' && !userService.canAdminManageRole(target.role as UserRole)) {
+      throw new ForbiddenError(`Your role '${actorRole}' cannot manage users with role '${target.role}'`);
+    }
+
+    if (target.role !== 'reception') {
+      throw new ValidationError('Apenas utilizadores de recepção possuem estação de atendimento para libertar.');
+    }
+
+    const result = await userService.setActiveStation(id, null, null);
+
+    res.json({
+      message: 'Estação libertada com sucesso e sessão encerrada.',
+      user: {
+        id: result.id,
+        username: result.username,
+        name: result.name,
+        role: result.role,
+        areaId: result.areaId,
+        stationId: result.stationId,
+        active: result.active,
+      }
+    });
+  } catch (error) {
+    if (isAppError(error)) {
+      return res.status(error.statusCode).json({ error: error.message, code: error.code });
+    }
+    logger.error('Release station error', { module: 'users', error });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // DELETE /api/users/:id — delete user
 router.delete('/:id', requireRole('root', 'admin'), async (req, res) => {
   try {

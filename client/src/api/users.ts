@@ -88,3 +88,8 @@ export async function resetUserPassword(id: number, newPassword: string): Promis
 export async function changePassword(id: number, newPassword: string, currentPassword?: string): Promise<void> {
   await apiClient.patch(`/users/${id}/password`, { newPassword, currentPassword });
 }
+
+export async function forceReleaseStation(id: number): Promise<{ message: string; user: UserRow }> {
+  const { data } = await apiClient.post<{ message: string; user: UserRow }>(`/users/${id}/release-station`);
+  return data;
+}

@@ -149,12 +149,12 @@ App Android nativo mínimo (`android/display/`) que carrega o display web num We
 
 | # | Issue | Priority |
 |---|-------|----------|
-| 1 | **Toast UI missing** — `useNotificationStore` guarda notificações mas nenhum componente as renderiza no ecrã | 🔴 HIGH |
-| 2 | **Dispenser page missing** — `/dispenser` route existe no redirect mas não há componente | 🔴 HIGH |
-| 3 | **Station association** — Criar utilizador `reception` não associa `stationId`; painel de fila precisa dele | 🔴 HIGH |
-| 4 | **Ads on DisplayView** — Anúncios existem no backend mas display não os mostra | 🟡 MED |
-| 5 | **No-show flow** — `markNoShow` existe no service mas sem route nem UI | 🟡 MED |
-| 6 | **Logo** — Não foi possível obter do site (em manutenção); SVG próprio criado | 🟢 LOW |
+| 1 | **Toast UI missing** — `useNotificationStore` guarda notificações mas nenhum componente as renderiza no ecrã | 🟢 RESOLVED |
+| 2 | **Dispenser page missing** — `/dispenser` route existe no redirect mas não há componente | 🟢 OUTDATED |
+| 3 | **Station association** — Criar utilizador `reception` não associa `stationId`; painel de fila precisa dele | 🟢 OUTDATED |
+| 4 | **Ads on DisplayView** — Anúncios existem no backend mas display não os mostra | 🟢 RESOLVED |
+| 5 | **No-show flow** — `markNoShow` existe no service mas sem route nem UI | 🟢 RESOLVED |
+| 6 | **Logo** — Não foi possível obter do site (em manutenção); SVG próprio criado | 🟢 RESOLVED |
 
 ## Histórico de Decisões Arquiteturais
 
@@ -185,6 +185,15 @@ App Android nativo mínimo (`android/display/`) que carrega o display web num We
   3. No fluxo de Login, enviamos o `browserStationId` (se existir) para o backend.
   4. O backend valida: se o utilizador for de recepção e possuir uma estação ativa gravada na base de dados, o `browserStationId` enviado no login deve coincidir com o ID gravado na BD. Caso contrário, o login é recusado com uma mensagem clara obrigando o utilizador a liberar o posto anterior.
 - **Impacto**: Garante que o operador não consiga fazer login noutra estação sem antes liberar formalmente o posto anterior (na máquina onde o posto foi ocupado), prevenindo conflitos de sessões e inconsistência física de postos.
+
+### Forçar Libertação de Postos por Administradores (Junho 2026)
+- **Problema**: Em casos onde o navegador era limpo, o dispositivo danificava, ou ocorriam falhas de rede antes do logout do operador de recepção, o posto ficava bloqueado na base de dados. O operador não conseguia fazer login em nenhum outro dispositivo e dependia de intervenção manual direta na base de dados para resolver.
+- **Solução**:
+  1. Implementado um novo endpoint de backend: `POST /api/users/:id/release-station`, restrito aos perfis `root` e `admin`.
+  2. Este endpoint limpa a associação do utilizador alvo em qualquer estação na base de dados (coluna `receptionUserId` em `stations`) e define as propriedades `stationId` e `areaId` do utilizador na tabela `users` como `null`.
+  3. No frontend, adicionado um botão de acção "Libertar" na lista de utilizadores da área de administração (`/admin/users`) para cada utilizador de recepção que tenha uma estação ativa vinculada.
+  4. Adicionado um diálogo de confirmação seguro que avisa o administrador antes de proceder com o término forçado da sessão e libertação do posto.
+- **Impacto**: Permite que os administradores da clínica resolvam instantaneamente bloqueios de sessão de forma visual e segura sem requerer suporte técnico especializado ou intervenção directa na base de dados, reduzindo o tempo de inatividade da recepção em caso de imprevistos físicos ou de rede.
 
 ## File Locations
 

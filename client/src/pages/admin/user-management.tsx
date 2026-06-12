@@ -5,7 +5,7 @@ import { Heading, Text, VStack, Button, Badge, Flex, Dialog, Portal, Box, Card, 
 import { Table } from '@chakra-ui/react';
 import { Field, Input } from '@chakra-ui/react';
 import { NativeSelect } from '@chakra-ui/react';
-import { listUsers, createUser, updateUser, deleteUser, changePassword } from '../../api/users';
+import { listUsers, createUser, updateUser, deleteUser, changePassword, forceReleaseStation } from '../../api/users';
 import { listAreas } from '../../api/areas';
 import { listStations } from '../../api/stations';
 import { useNotificationStore } from '../../store/notification-store';
@@ -93,6 +93,32 @@ export default function UserManagement() {
     } catch (err: any) {
       notify.addNotification({ type: 'error', title: err.response?.data?.error || 'Erro ao alterar senha' });
     } finally { setSavingPassword(false); }
+  };
+
+  // Release station states
+  const [releaseTarget, setReleaseTarget] = useState<UserRow | null>(null);
+  const [releaseDialogOpen, setReleaseDialogOpen] = useState(false);
+  const [releasing, setReleasing] = useState(false);
+
+  const openReleaseStation = (user: UserRow) => {
+    setReleaseTarget(user);
+    setReleaseDialogOpen(true);
+  };
+
+  const handleReleaseStation = async () => {
+    if (!releaseTarget) return;
+    setReleasing(true);
+    try {
+      await forceReleaseStation(releaseTarget.id);
+      notify.addNotification({ type: 'success', title: `Estação de ${releaseTarget.username} libertada com sucesso!` });
+      setReleaseDialogOpen(false);
+      setReleaseTarget(null);
+      loadUsers();
+    } catch (err: any) {
+      notify.addNotification({ type: 'error', title: err.response?.data?.error || 'Erro ao libertar estação' });
+    } finally {
+      setReleasing(false);
+    }
   };
 
 
@@ -487,6 +513,11 @@ export default function UserManagement() {
                                     Activar
                                   </Button>
                                 )}
+                                {u.role === 'reception' && u.stationId !== null && (
+                                  <Button size="sm" variant="ghost" colorPalette="orange" onClick={() => openReleaseStation(u)}>
+                                    Libertar
+                                  </Button>
+                                )}
                                 {u.role !== 'admin' && (
                                   <Button size="sm" variant="ghost" colorPalette="red" onClick={() => handleDeleteClick(u)}>
                                     Eliminar
@@ -660,6 +691,36 @@ export default function UserManagement() {
                 <Dialog.Footer pt={3} borderTop="1px solid" borderColor="blackAlpha.100" display="flex" justifyContent="end" gap={3}>
                   <Button variant="ghost" size="sm" onClick={() => { setPwdOpen(false); setPwdUser(null); }}>Cancelar</Button>
                   <Button colorPalette="teal" size="sm" loading={savingPassword} onClick={handleResetPassword}>Alterar Senha</Button>
+                </Dialog.Footer>
+              </Dialog.Content>
+            </Dialog.Positioner>
+          </Portal>
+        )}
+      </Dialog.Root>
+
+      <Dialog.Root open={releaseDialogOpen} onOpenChange={(e: { open: boolean }) => setReleaseDialogOpen(e.open)}>
+        {releaseDialogOpen && releaseTarget && (
+          <Portal>
+            <Dialog.Backdrop bg="blackAlpha.600" backdropFilter="blur(4px)" />
+            <Dialog.Positioner p={4} display="flex" alignItems="center" justifyContent="center">
+              <Dialog.Content bg="white" borderRadius="16px" boxShadow="lg" maxW="440px" w="100%" p={6}>
+                <Dialog.Header pb={3} borderBottom="1px solid" borderColor="blackAlpha.100">
+                  <Dialog.Title fontSize="lg" fontWeight="bold" color="brand.700">Forçar Libertação de Posto</Dialog.Title>
+                </Dialog.Header>
+                <Dialog.Body py={4}>
+                  <Text fontSize="sm" color="gray.700">
+                    Tem a certeza que deseja forçar o término da sessão e libertar o posto do operador <strong>{releaseTarget.username}</strong>?
+                    <br /><br />
+                    Esta acção removerá o operador da estação <strong>{stationLabel(releaseTarget)}</strong>, permitindo que ele inicie sessão em qualquer outro dispositivo.
+                  </Text>
+                </Dialog.Body>
+                <Dialog.Footer pt={3} borderTop="1px solid" borderColor="blackAlpha.100" display="flex" justifyContent="end" gap={3}>
+                  <Button variant="ghost" size="sm" onClick={() => { setReleaseDialogOpen(false); setReleaseTarget(null); }} disabled={releasing}>
+                    Cancelar
+                  </Button>
+                  <Button colorPalette="orange" size="sm" loading={releasing} onClick={handleReleaseStation}>
+                    Forçar Libertação
+                  </Button>
                 </Dialog.Footer>
               </Dialog.Content>
             </Dialog.Positioner>
