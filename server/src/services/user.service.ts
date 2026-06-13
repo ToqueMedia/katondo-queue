@@ -9,7 +9,7 @@ import { logger } from '../utils/logger.js';
 import type { UserRole } from '../types/index.js';
 
 // Roles that admin can create
-const ADMIN_CREATABLE_ROLES: UserRole[] = ['reception', 'management', 'display', 'dispenser'];
+const ADMIN_CREATABLE_ROLES: UserRole[] = ['admin_manager', 'reception', 'management', 'display', 'dispenser'];
 
 // Roles that require areaId (receptionist is now mobile so area is not required at creation!)
 const AREA_REQUIRED_ROLES: UserRole[] = ['display', 'dispenser'];

@@ -5,7 +5,7 @@ import { mysqlTable, varchar, int, real, timestamp, boolean, date, mysqlEnum, te
 // ──────────────────────────────────────────────
 // User — all user types (root, admin, reception, management, display, dispenser)
 // ──────────────────────────────────────────────
-export const userRoleEnum = mysqlEnum('role', ['root', 'admin', 'reception', 'management', 'display', 'dispenser']);
+export const userRoleEnum = mysqlEnum('role', ['root', 'admin', 'admin_manager', 'reception', 'management', 'display', 'dispenser']);
 
 export const users = mysqlTable('users', {
   id: int('id').primaryKey().autoincrement(),

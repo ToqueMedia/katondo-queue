@@ -17,7 +17,7 @@ const router = Router();
 const createUserSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['root', 'admin', 'reception', 'management', 'display', 'dispenser']),
+  role: z.enum(['root', 'admin', 'admin_manager', 'reception', 'management', 'display', 'dispenser']),
   areaId: z.number().int().nullable().optional(),
   stationId: z.number().int().nullable().optional(),
   name: z.string().nullable().optional(),
@@ -25,7 +25,7 @@ const createUserSchema = z.object({
 
 const updateUserSchema = z.object({
   username: z.string().min(3).optional(),
-  role: z.enum(['root', 'admin', 'reception', 'management', 'display', 'dispenser']).optional(),
+  role: z.enum(['root', 'admin', 'admin_manager', 'reception', 'management', 'display', 'dispenser']).optional(),
   areaId: z.number().int().nullable().optional(),
   stationId: z.number().int().nullable().optional(),
   active: z.boolean().optional(),

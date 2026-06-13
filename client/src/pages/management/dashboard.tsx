@@ -40,7 +40,7 @@ export default function ManagementDashboard() {
     <VStack gap={8} align="stretch">
       <VStack gap={1} align="start">
         <Heading size="lg" fontFamily="heading" fontWeight="400" color="brand.700">
-          Dashboard — Gestão
+          Dashboard — Marketing
         </Heading>
         <Text color="ink.muted" fontSize="sm">
           {new Date().toLocaleDateString('pt', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

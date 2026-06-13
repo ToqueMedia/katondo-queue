@@ -13,8 +13,9 @@ import { AdminPageHeader } from '../../components/admin/admin-page';
 import type { UserRow, UserRole, AreaRow, StationRow } from '../../types';
 
 const ROLES: { value: UserRole; label: string }[] = [
+  { value: 'admin_manager', label: 'Gestor Administrativo' },
   { value: 'reception', label: 'Recepção' },
-  { value: 'management', label: 'Gestão' },
+  { value: 'management', label: 'Marketing' },
   { value: 'display', label: 'Display' },
   { value: 'dispenser', label: 'Dispensador' },
 ];
@@ -23,8 +24,9 @@ type UserTab = 'all' | UserRole | 'inactive';
 
 const USER_TABS: { value: UserTab; label: string; description: string }[] = [
   { value: 'all', label: 'Todos', description: 'Visão geral' },
+  { value: 'admin_manager', label: 'Gestores', description: 'Gestores Administrativos' },
   { value: 'reception', label: 'Recepção', description: 'Operadores de atendimento' },
-  { value: 'management', label: 'Gestão', description: 'Gestores operacionais' },
+  { value: 'management', label: 'Marketing', description: 'Equipa de Marketing' },
   { value: 'display', label: 'Displays', description: 'Ecrãs de chamada' },
   { value: 'dispenser', label: 'Dispensadores', description: 'Quiosques de emissão' },
   { value: 'inactive', label: 'Inactivos', description: 'Contas desactivadas — reactivar para voltar a usar' },
@@ -281,8 +283,8 @@ export default function UserManagement() {
 
   const roleLabel = (role: UserRole) => {
     const labels: Record<UserRole, string> = {
-      root: 'Root', admin: 'Administrador', reception: 'Recepção',
-      management: 'Gestão', display: 'Display', dispenser: 'Dispensador',
+      root: 'Root', admin: 'Administrador', admin_manager: 'Gestor Administrativo', reception: 'Recepção',
+      management: 'Marketing', display: 'Display', dispenser: 'Dispensador',
     };
     return labels[role];
   };
@@ -354,11 +356,15 @@ export default function UserManagement() {
           <Heading size="2xl" color="brand.700">{users.length}</Heading>
         </Card.Root>
         <Card.Root p={5} bg="white" borderRadius="10px" border="1px solid" borderColor="blackAlpha.100" shadow="sm">
+          <Text fontSize="xs" color="gray.500" fontWeight="600">Gestores</Text>
+          <Heading size="2xl" color="purple.600">{userCounts.admin_manager || 0}</Heading>
+        </Card.Root>
+        <Card.Root p={5} bg="white" borderRadius="10px" border="1px solid" borderColor="blackAlpha.100" shadow="sm">
           <Text fontSize="xs" color="gray.500" fontWeight="600">Recepção</Text>
           <Heading size="2xl" color="teal.600">{userCounts.reception || 0}</Heading>
         </Card.Root>
         <Card.Root p={5} bg="white" borderRadius="10px" border="1px solid" borderColor="blackAlpha.100" shadow="sm">
-          <Text fontSize="xs" color="gray.500" fontWeight="600">Gestão</Text>
+          <Text fontSize="xs" color="gray.500" fontWeight="600">Marketing</Text>
           <Heading size="2xl" color="blue.600">{userCounts.management || 0}</Heading>
         </Card.Root>
         <Card.Root p={5} bg="white" borderRadius="10px" border="1px solid" borderColor="blackAlpha.100" shadow="sm">

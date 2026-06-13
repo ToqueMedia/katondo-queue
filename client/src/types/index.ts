@@ -1,6 +1,6 @@
 // Client-side TypeScript types
 
-export type UserRole = 'root' | 'admin' | 'reception' | 'management' | 'display' | 'dispenser';
+export type UserRole = 'root' | 'admin' | 'admin_manager' | 'reception' | 'management' | 'display' | 'dispenser';
 export type TicketStatus = 'waiting' | 'called' | 'in_service' | 'completed' | 'cancelled' | 'no_show';
 export type TicketFormat = 'numeric' | 'alphanumeric' | 'custom';
 export type AdContentType = 'image' | 'video' | 'text' | 'html';

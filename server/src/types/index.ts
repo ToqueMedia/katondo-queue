@@ -1,6 +1,6 @@
 // Shared TypeScript types for the Katondo Queue system
 
-export type UserRole = 'root' | 'admin' | 'reception' | 'management' | 'display' | 'dispenser';
+export type UserRole = 'root' | 'admin' | 'admin_manager' | 'reception' | 'management' | 'display' | 'dispenser';
 
 export type TicketStatus = 'waiting' | 'called' | 'in_service' | 'completed' | 'cancelled' | 'no_show';
 

@@ -43,7 +43,7 @@ const ROLE_LABELS: Record<string, string> = {
   root: 'Super Admin',
   admin: 'Administrador',
   reception: 'Recepção',
-  management: 'Gestão',
+  management: 'Marketing',
   display: 'Display',
   dispenser: 'Dispensador',
 };

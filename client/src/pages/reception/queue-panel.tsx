@@ -456,7 +456,7 @@ export default function ReceptionQueue() {
                       </Badge>
                       {current.status === 'called' && (
                         <Text fontSize="sm" color="ink.muted">
-                          Chamada {current.callCount || 0}/2
+                          Chamada {current.callCount || 0}/5
                         </Text>
                       )}
                     </HStack>
@@ -474,7 +474,7 @@ export default function ReceptionQueue() {
                           >
                             Iniciar Atendimento
                           </Button>
-                          {(current.callCount || 0) < 2 && (
+                          {(current.callCount || 0) < 5 && (
                             <Button
                               colorPalette="blue"
                               size="md"

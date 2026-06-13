@@ -104,6 +104,20 @@ export default function App() {
           </RoleGuard>
         } />
 
+        {/* Admin Manager routes */}
+        <Route path="/admin-manager/*" element={
+          <RoleGuard allowedRoles={['admin_manager']}>
+            <AppShell>
+              <Routes>
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="tickets" element={<TicketManagement />} />
+                <Route path="account" element={<MyAccount />} />
+                <Route path="*" element={<Navigate to="/admin-manager/dashboard" replace />} />
+              </Routes>
+            </AppShell>
+          </RoleGuard>
+        } />
+
         {/* Management routes */}
         <Route path="/management/*" element={
           <RoleGuard allowedRoles={['management']}>
@@ -137,6 +151,7 @@ function getDefaultRoute(role: string): string {
   switch (role) {
     case 'root': return '/root/admins';
     case 'admin': return '/admin/dashboard';
+    case 'admin_manager': return '/admin-manager/dashboard';
     case 'reception': return '/reception/queue';
     case 'management': return '/management/dashboard';
     case 'display': return '/display';
