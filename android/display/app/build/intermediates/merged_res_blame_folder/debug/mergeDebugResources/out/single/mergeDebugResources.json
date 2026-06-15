@@ -1,26 +1,26 @@
 [
     {
-        "merged": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-debug-56:/drawable_ic_launcher_foreground.xml.flat",
-        "source": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-main-58:/drawable/ic_launcher_foreground.xml"
+        "merged": "ao.katondo.display.app-debug-57:/drawable_logo_katondo.png.flat",
+        "source": "ao.katondo.display.app-main-59:/drawable/logo_katondo.png"
     },
     {
-        "merged": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-debug-56:/drawable_ic_launcher_background.xml.flat",
-        "source": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-main-58:/drawable/ic_launcher_background.xml"
+        "merged": "ao.katondo.display.app-debug-57:/raw_beep.mp3.flat",
+        "source": "ao.katondo.display.app-main-59:/raw/beep.mp3"
     },
     {
-        "merged": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-debug-56:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-main-58:/mipmap-anydpi-v26/ic_launcher.xml"
+        "merged": "ao.katondo.display.app-debug-57:/raw_queue_chime.mp3.flat",
+        "source": "ao.katondo.display.app-main-59:/raw/queue_chime.mp3"
     },
     {
-        "merged": "ao.katondo.display.app-debug-56:/raw_beep.mp3.flat",
-        "source": "ao.katondo.display.app-main-58:/raw/beep.mp3"
+        "merged": "ao.katondo.display.app-debug-57:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "ao.katondo.display.app-main-59:/drawable/ic_launcher_foreground.xml"
     },
     {
-        "merged": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-debug-56:/drawable_logo_katondo.png.flat",
-        "source": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-main-58:/drawable/logo_katondo.png"
+        "merged": "ao.katondo.display.app-debug-57:/drawable_ic_launcher_background.xml.flat",
+        "source": "ao.katondo.display.app-main-59:/drawable/ic_launcher_background.xml"
     },
     {
-        "merged": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-debug-56:/raw_queue_chime.mp3.flat",
-        "source": "/Users/ithustle/.gradle/daemon/9.4.1/ao.katondo.display.app-main-58:/raw/queue_chime.mp3"
+        "merged": "ao.katondo.display.app-debug-57:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "ao.katondo.display.app-main-59:/mipmap-anydpi-v26/ic_launcher.xml"
     }
 ]

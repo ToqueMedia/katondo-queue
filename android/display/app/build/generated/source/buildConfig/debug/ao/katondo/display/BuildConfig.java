@@ -7,6 +7,6 @@ public final class BuildConfig {
   public static final boolean DEBUG = Boolean.parseBoolean("true");
   public static final String APPLICATION_ID = "ao.katondo.display.debug";
   public static final String BUILD_TYPE = "debug";
-  public static final int VERSION_CODE = 13;
-  public static final String VERSION_NAME = "1.0-DEBUG";
+  public static final int VERSION_CODE = 16;
+  public static final String VERSION_NAME = "1.0.1-DEBUG";
 }

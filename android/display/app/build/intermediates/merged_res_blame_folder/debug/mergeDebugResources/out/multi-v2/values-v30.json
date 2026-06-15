@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "ao.katondo.display.app-mergeDebugResources-54:/values-v30/values-v30.xml",
+            "outputFile": "ao.katondo.display.app-mergeDebugResources-55:/values-v30/values-v30.xml",
             "map": [
                 {
-                    "source": "/Users/ithustle/.gradle/caches/9.4.1/transforms/9cafa05c8a8a03db46f7c49f9365477e/transformed/material3/res/values-v30/values-v30.xml",
+                    "source": "/Users/ithustle/.gradle/caches/8.11.1/transforms/6722157b3afa8e238657ba09bbb77e15/transformed/material3/res/values-v30/values-v30.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

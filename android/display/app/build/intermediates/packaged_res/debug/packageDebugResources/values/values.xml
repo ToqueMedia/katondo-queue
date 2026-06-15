@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Katondo Display</string>
-    <string name="server_url">http://192.168.1.100:3001</string>
+    <string name="server_url">http://10.245.80.114:80</string>
     <style name="Theme.KatondoDisplay" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowNoTitle">true</item>
