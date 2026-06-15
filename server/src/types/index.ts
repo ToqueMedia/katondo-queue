@@ -10,6 +10,7 @@ export type AdContentType = 'image' | 'video' | 'text' | 'html';
 
 export interface JwtPayload {
   userId: number;
+  username: string;
   role: UserRole;
   areaId: number | null;
   stationId: number | null;

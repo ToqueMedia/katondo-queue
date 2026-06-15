@@ -18,6 +18,40 @@ const emitSchema = z.object({
   areaId: z.number().int(),
 });
 
+const batterySchema = z.object({
+  level: z.number().int().min(0).max(100),
+});
+
+// POST /api/dispenser/battery-alert — emit battery low alert
+router.post('/battery-alert', authMiddleware, async (req, res) => {
+  try {
+    if (req.auth!.role !== 'dispenser') {
+      return res.status(403).json({ error: 'Only dispenser users can emit battery alerts' });
+    }
+
+    const data = batterySchema.parse(req.body);
+    const areaId = req.auth!.areaId;
+    
+    if (!areaId) {
+      return res.status(400).json({ error: 'Área não associada ao dispensador' });
+    }
+
+    const dispenserName = req.auth!.username;
+
+    broadcastToArea(io, areaId, 'dispenser:battery_low', {
+      dispenserName,
+      level: data.level
+    });
+
+    logger.info('Battery alert broadcasted', { module: 'dispenser-api', dispenserName, level: data.level, areaId });
+    res.json({ message: 'Alert sent' });
+  } catch (error) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Validation failed', details: error.errors });
+    logger.error('Battery alert error', { module: 'dispenser-api', error });
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // POST /api/dispenser/tickets — emit ticket (dispenser user auth)
 router.post('/tickets', authMiddleware, async (req, res) => {
   try {

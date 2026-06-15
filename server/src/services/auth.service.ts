@@ -37,6 +37,7 @@ export async function login(username: string, password: string, browserStationId
 
   const payload: JwtPayload = {
     userId: user.id,
+    username: user.username,
     role: user.role as UserRole,
     areaId: user.areaId ?? null,
     stationId: user.stationId ?? null,
@@ -81,6 +82,7 @@ export async function refreshToken(oldRefreshToken: string): Promise<{ token: st
 
     const payload: JwtPayload = {
       userId: user.id,
+      username: user.username,
       role: user.role as UserRole,
       areaId: user.areaId ?? null,
       stationId: user.stationId ?? null,
@@ -103,6 +105,7 @@ export async function refreshToken(oldRefreshToken: string): Promise<{ token: st
 export async function generateTokens(user: any): Promise<{ token: string; refreshToken: string }> {
   const payload: JwtPayload = {
     userId: user.id,
+    username: user.username,
     role: user.role as UserRole,
     areaId: user.areaId ?? null,
     stationId: user.stationId ?? null,
