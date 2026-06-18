@@ -110,7 +110,9 @@ export default function App() {
             <AppShell>
               <Routes>
                 <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="services" element={<ServiceManagement />} />
                 <Route path="tickets" element={<TicketManagement />} />
+                <Route path="indicators" element={<Indicators />} />
                 <Route path="account" element={<MyAccount />} />
                 <Route path="*" element={<Navigate to="/admin-manager/dashboard" replace />} />
               </Routes>

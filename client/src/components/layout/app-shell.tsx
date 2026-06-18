@@ -30,6 +30,13 @@ const SIDEBAR_ITEMS: Record<string, SidebarItem[]> = {
     { label: 'Backup de Dados', path: '/admin/backup', icon: '💾' },
     { label: 'Minha Conta', path: '/admin/account', icon: '🔒' },
   ],
+  admin_manager: [
+    { label: 'Dashboard', path: '/admin-manager/dashboard', icon: '◆' },
+    { label: 'Serviços', path: '/admin-manager/services', icon: '🏥' },
+    { label: 'Gestão de Senhas', path: '/admin-manager/tickets', icon: '🎫' },
+    { label: 'Indicadores', path: '/admin-manager/indicators', icon: '📊' },
+    { label: 'Minha Conta', path: '/admin-manager/account', icon: '🔒' },
+  ],
   management: [
     { label: 'Dashboard', path: '/management/dashboard', icon: '◆' },
     { label: 'Anúncios', path: '/management/ads', icon: '📢' },
@@ -42,6 +49,7 @@ const SIDEBAR_ITEMS: Record<string, SidebarItem[]> = {
 const ROLE_LABELS: Record<string, string> = {
   root: 'Super Admin',
   admin: 'Administrador',
+  admin_manager: 'Gestor (Admin)',
   reception: 'Recepção',
   management: 'Marketing',
   display: 'Display',
@@ -51,6 +59,7 @@ const ROLE_LABELS: Record<string, string> = {
 const ROLE_COLORS: Record<string, string> = {
   root: '#7C3AED',
   admin: '#1565C0',
+  admin_manager: '#0284C7',
   reception: '#059669',
   management: '#D97706',
   display: '#6B7280',

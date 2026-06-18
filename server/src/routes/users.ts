@@ -40,8 +40,8 @@ const changePasswordSchema = z.object({
 // All user routes require authentication
 router.use(authMiddleware);
 
-// GET /api/users — list users (root, admin only)
-router.get('/', requireRole('root', 'admin'), async (req, res) => {
+// GET /api/users — list users (root, admin, admin_manager)
+router.get('/', requireRole('root', 'admin', 'admin_manager'), async (req, res) => {
   try {
     const includeInactive = req.query.includeInactive === 'true';
     const result = await userService.listUsers(includeInactive);
@@ -55,8 +55,8 @@ router.get('/', requireRole('root', 'admin'), async (req, res) => {
   }
 });
 
-// POST /api/users — create user (root, admin only)
-router.post('/', requireRole('root', 'admin'), async (req, res) => {
+// POST /api/users — create user (root, admin, admin_manager)
+router.post('/', requireRole('root', 'admin', 'admin_manager'), async (req, res) => {
   try {
     const data = createUserSchema.parse(req.body);
     const creatorRole = req.auth!.role as UserRole;
@@ -167,7 +167,7 @@ router.patch('/active-station', requireRole('reception'), async (req, res) => {
 });
 
 // PATCH /api/users/:id — update user
-router.patch('/:id', requireRole('root', 'admin'), async (req, res) => {
+router.patch('/:id', requireRole('root', 'admin', 'admin_manager'), async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
     const data = updateUserSchema.parse(req.body);
@@ -189,6 +189,10 @@ router.patch('/:id', requireRole('root', 'admin'), async (req, res) => {
 
     if (actorRole === 'admin' && !userService.canAdminManageRole(targetRole)) {
       throw new ForbiddenError(`Your role '${actorRole}' cannot assign role '${targetRole}'`);
+    }
+
+    if (actorRole === 'admin_manager' && (existing.role === 'admin' || targetRole === 'admin')) {
+      throw new ForbiddenError(`Your role '${actorRole}' cannot manage administrators`);
     }
 
     const result = await userService.updateUser(id, {
@@ -225,7 +229,7 @@ router.patch('/:id', requireRole('root', 'admin'), async (req, res) => {
 });
 
 // POST /api/users/:id/release-station — force logout and release station
-router.post('/:id/release-station', requireRole('root', 'admin'), async (req, res) => {
+router.post('/:id/release-station', requireRole('root', 'admin', 'admin_manager'), async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
     const actorRole = req.auth!.role as UserRole;
@@ -270,7 +274,7 @@ router.post('/:id/release-station', requireRole('root', 'admin'), async (req, re
 });
 
 // DELETE /api/users/:id — delete user
-router.delete('/:id', requireRole('root', 'admin'), async (req, res) => {
+router.delete('/:id', requireRole('root', 'admin', 'admin_manager'), async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
     const actorRole = req.auth!.role as UserRole;

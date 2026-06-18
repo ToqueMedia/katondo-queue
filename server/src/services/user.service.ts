@@ -226,6 +226,10 @@ export async function setActiveStation(userId: number, areaId: number | null, st
 export function canCreateRole(creatorRole: UserRole, targetRole: UserRole): boolean {
   if (creatorRole === 'root') return targetRole === 'admin';
   if (creatorRole === 'admin') return ADMIN_CREATABLE_ROLES.includes(targetRole);
+  if (creatorRole === 'admin_manager') {
+    // admin_manager can create all admin-creatable roles EXCEPT admin (root-only)
+    return ADMIN_CREATABLE_ROLES.includes(targetRole) && targetRole !== 'admin';
+  }
   return false;
 }
 

@@ -12,6 +12,7 @@ import { listTickets } from '../../api/tickets';
 import { getBackupStatus } from '../../api/backup';
 import { useSocket } from '../../hooks/useSocket';
 import { useNotificationStore } from '../../store/notification-store';
+import { useAuthStore } from '../../store/auth-store';
 import { AdminPageHeader } from '../../components/admin/admin-page';
 import { formatDurationFromMinutes } from '../../utils/time-format';
 import type { TodayIndicators, ServiceIndicators } from '../../api/indicators';
@@ -40,6 +41,8 @@ export default function AdminDashboard() {
 
   const [loading, setLoading] = useState(true);
   const notify = useNotificationStore();
+  const role = useAuthStore((s) => s.user?.role) || 'admin';
+  const basePrefix = role === 'admin_manager' ? '/admin-manager' : '/admin';
 
   // Dialog state for Quick Delegation
   const [delegateOpen, setDelegateOpen] = useState(false);
@@ -54,18 +57,27 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [list, bStatus] = await Promise.all([listAreas(), getBackupStatus()]);
+        const list = await listAreas();
         setAreas(list);
-        setBackupStatus(bStatus);
         if (list.length > 0) {
           setSelectedAreaId(list[0].id); // Default to first area
+        }
+
+        // Fetch backup status only for full admin/root
+        if (['root', 'admin'].includes(role)) {
+          try {
+            const bStatus = await getBackupStatus();
+            setBackupStatus(bStatus);
+          } catch (err) {
+            console.warn('[Dashboard] Failed to fetch backup status:', err);
+          }
         }
       } catch {
         notify.addNotification({ type: 'error', title: 'Erro ao carregar dados iniciais' });
       }
     };
     fetchInitialData();
-  }, []);
+  }, [role]);
 
   // Fetch all real-time dashboard data
   const loadData = async (showLoading = true) => {
@@ -228,7 +240,7 @@ export default function AdminDashboard() {
             <Alert.Title fontSize="sm" fontWeight="bold">Backup Obrigatório em Atraso!</Alert.Title>
             <Alert.Description fontSize="xs">
               Já se passaram <strong>{backupStatus.daysSinceLastBackup} dias</strong> desde o último backup de segurança.
-              Por favor, vá à secção de <a href="/admin/backup" style={{ fontWeight: 'bold', textDecoration: 'underline', color: 'inherit' }}>Backup de Dados</a> para exportar e salvaguardar a base de dados localmente.
+              Por favor, vá à secção de <a href={`${basePrefix}/backup`} style={{ fontWeight: 'bold', textDecoration: 'underline', color: 'inherit' }}>Backup de Dados</a> para exportar e salvaguardar a base de dados localmente.
             </Alert.Description>
           </Alert.Content>
         </Alert.Root>

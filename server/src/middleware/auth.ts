@@ -34,11 +34,16 @@ export function authMiddleware(req: Request, _res: Response, next: NextFunction)
   }
 }
 
-// Role-based access guard — checks if authenticated user has required role(s)
+// Role-based access guard — checks if authenticated user has required role(s).
+// 'root' always bypasses the check so the super-admin can never be accidentally locked out.
 export function requireRole(...roles: UserRole[]) {
   return (req: Request, _res: Response, next: NextFunction) => {
     if (!req.auth) {
       return next(new UnauthorizedError('Authentication required'));
+    }
+
+    if (req.auth.role === 'root') {
+      return next();
     }
 
     if (!roles.includes(req.auth.role)) {
