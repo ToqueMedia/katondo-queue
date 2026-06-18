@@ -151,9 +151,12 @@ init_mysql() {
 deploy() {
     info "A fazer build e deploy (pode demorar 5-10 min na primeira vez)..."
 
-    ssh_run "cd $DEPLOY_DIR && docker compose down --remove-orphans 2>/dev/null || true"
-    ssh_run "cd $DEPLOY_DIR && docker compose build --no-cache"
-    ssh_run "cd $DEPLOY_DIR && docker compose up -d"
+    # Build first while the current containers keep serving traffic.
+    # Then recreate only services whose image/config changed. This avoids the long outage
+    # caused by `docker compose down`, but active Socket.IO connections may still reconnect
+    # briefly when the app container is replaced.
+    ssh_run "cd $DEPLOY_DIR && docker compose build"
+    ssh_run "cd $DEPLOY_DIR && docker compose up -d --remove-orphans"
 
     # Wait for app health (proxied via Nginx port 80 to host)
     info "A aguardar aplicação ficar pronta..."

@@ -248,6 +248,7 @@ export default function LoginPage() {
       switch (data.user.role) {
         case 'root': navigate('/root/admins'); break;
         case 'admin': navigate('/admin/dashboard'); break;
+        case 'admin_manager': navigate('/admin-manager/dashboard'); break;
         case 'reception': navigate('/reception/queue'); break;
         case 'management': navigate('/management/dashboard'); break;
         case 'display': navigate('/display'); break;

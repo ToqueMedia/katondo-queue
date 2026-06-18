@@ -183,6 +183,45 @@ export default function ReceptionQueue() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasActiveTicket]);
 
+  // Web Notifications (Bateria e Novas Senhas)
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission();
+    }
+
+    const handleBatteryLow = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const { dispenserName, level } = customEvent.detail;
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('Bateria Fraca no Dispensador', {
+          body: `O dispensador ${dispenserName} está com ${level}% de bateria. Por favor, troque ou carregue.`,
+          icon: '/logo-katondo.png'
+        });
+      }
+    };
+
+    const handleTicketCreated = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      const ticket = customEvent.detail;
+      if ('Notification' in window && Notification.permission === 'granted') {
+        if (document.hidden) {
+          new Notification('Nova Senha Aguardando', {
+            body: `A senha ${ticket.number} acabou de entrar na fila.`,
+            icon: '/logo-katondo.png'
+          });
+        }
+      }
+    };
+
+    window.addEventListener('dispenser:battery_low', handleBatteryLow);
+    window.addEventListener('queue:ticket-created', handleTicketCreated);
+
+    return () => {
+      window.removeEventListener('dispenser:battery_low', handleBatteryLow);
+      window.removeEventListener('queue:ticket-created', handleTicketCreated);
+    };
+  }, []);
+
   const loadQueue = async () => {
     setLoading(true);
     try {

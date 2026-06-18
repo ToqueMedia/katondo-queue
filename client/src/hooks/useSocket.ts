@@ -37,7 +37,7 @@ export function useSocket(areaId: number | null) {
     const token = getToken();
     const s = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
-      reconnectionAttempts: 10,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 5000,
       auth: { token },
     });
@@ -81,6 +81,7 @@ export function useSocket(areaId: number | null) {
           const isOurService = tickets.some(t => t.id === payload.ticket.id);
           if (isOurService) {
             notify.addNotification({ type: 'info', title: `Nova senha: ${payload.ticket.number}` });
+            window.dispatchEvent(new CustomEvent('queue:ticket-created', { detail: payload.ticket }));
           }
         } catch (err) {
           console.error('[Socket] Failed to fetch updated tickets for receptionist', err);
@@ -122,6 +123,10 @@ export function useSocket(areaId: number | null) {
     });
 
     s.on('ticket:cancelled', async (payload) => {
+      if (useQueueStore.getState().currentTicket?.id === payload.ticketId) {
+        useQueueStore.getState().setCurrentTicket(null);
+      }
+      
       const userJson = localStorage.getItem('user');
       const user = userJson ? JSON.parse(userJson) : null;
       if (user && user.role === 'reception' && user.stationId) {
@@ -158,6 +163,19 @@ export function useSocket(areaId: number | null) {
 
     s.on('ads:updated', (_payload) => {
       console.log('[Socket] Ads updated', _payload);
+    });
+
+    s.on('dispenser:battery_low', (payload) => {
+      const userJson = localStorage.getItem('user');
+      const user = userJson ? JSON.parse(userJson) : null;
+      if (user && user.role === 'reception') {
+        notify.addNotification({ 
+          type: 'warning', 
+          title: `Bateria fraca (${payload.level}%)`, 
+          description: `Dispensador: ${payload.dispenserName}` 
+        });
+        window.dispatchEvent(new CustomEvent('dispenser:battery_low', { detail: payload }));
+      }
     });
 
     return () => {

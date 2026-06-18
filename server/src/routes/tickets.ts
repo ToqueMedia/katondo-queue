@@ -36,7 +36,7 @@ const callNextSchema = z.object({
 router.use(authMiddleware);
 
 // GET /api/tickets — list tickets with optional filters
-router.get('/', requireRole('reception', 'dispenser', 'admin', 'management', 'display'), async (req, res) => {
+router.get('/', requireRole('reception', 'dispenser', 'admin', 'admin_manager', 'management', 'display'), async (req, res) => {
   try {
     let areaId = req.query.areaId ? parseInt(String(req.query.areaId), 10) : undefined;
     let stationId = req.query.stationId ? parseInt(String(req.query.stationId), 10) : undefined;
@@ -284,7 +284,7 @@ router.patch('/:id/cancel', requireRole('reception'), async (req, res) => {
 });
 
 // DELETE /api/tickets/:id — permanently delete ticket (admin)
-router.delete('/:id', requireRole('admin', 'management'), async (req, res) => {
+router.delete('/:id', requireRole('admin', 'admin_manager', 'management'), async (req, res) => {
   try {
     const ticketId = parseInt(String(req.params.id), 10);
     const ticket = await ticketService.deleteTicket(ticketId);

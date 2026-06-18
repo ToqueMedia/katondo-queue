@@ -23,7 +23,7 @@ router.get('/server-url', async (_req, res) => {
 // Protected endpoints — root and admin
 router.use(authMiddleware);
 
-router.get('/', requireRole('root', 'admin'), async (_req, res) => {
+router.get('/', requireRole('root', 'admin', 'admin_manager'), async (_req, res) => {
   try {
     const settings = await settingsService.getAllSettings();
     res.json(settings);
@@ -40,7 +40,7 @@ const updateSchema = z.object({
   description: z.string().optional(),
 });
 
-router.put('/', requireRole('root', 'admin'), async (req, res) => {
+router.put('/', requireRole('root', 'admin', 'admin_manager'), async (req, res) => {
   try {
     const data = updateSchema.parse(req.body);
     await settingsService.setSetting(data.key, data.value, data.description);

@@ -25,7 +25,7 @@ const updateSchema = z.object({
 
 router.use(authMiddleware);
 
-router.get('/', requireRole('admin'), async (_req, res) => {
+router.get('/', requireRole('admin', 'admin_manager'), async (_req, res) => {
   try {
     const result = await dispenserService.listDispensers();
     res.json(result);
@@ -36,7 +36,7 @@ router.get('/', requireRole('admin'), async (_req, res) => {
   }
 });
 
-router.post('/', requireRole('admin'), async (req, res) => {
+router.post('/', requireRole('admin', 'admin_manager'), async (req, res) => {
   try {
     const data = createSchema.parse(req.body);
     const result = await dispenserService.createDispenser(data.name, data.areaId, data.username, data.password);
@@ -49,7 +49,7 @@ router.post('/', requireRole('admin'), async (req, res) => {
   }
 });
 
-router.patch('/:id', requireRole('admin'), async (req, res) => {
+router.patch('/:id', requireRole('admin', 'admin_manager'), async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
     const data = updateSchema.parse(req.body);
@@ -63,7 +63,7 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
   }
 });
 
-router.delete('/:id', requireRole('admin'), async (req, res) => {
+router.delete('/:id', requireRole('admin', 'admin_manager'), async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
     await dispenserService.deleteDispenser(id);

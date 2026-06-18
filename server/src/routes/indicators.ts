@@ -11,7 +11,7 @@ const router = Router();
 router.use(authMiddleware);
 
 // GET /api/indicators/today — today's summary
-router.get('/today', requireRole('admin', 'management'), async (req, res) => {
+router.get('/today', requireRole('admin', 'admin_manager', 'management'), async (req, res) => {
   try {
     const areaId = req.query.areaId ? parseInt(String(req.query.areaId), 10) : undefined;
     const result = await indicatorService.getTodayIndicators(areaId);
@@ -24,7 +24,7 @@ router.get('/today', requireRole('admin', 'management'), async (req, res) => {
 });
 
 // GET /api/indicators/today/by-service — today's breakdown by service
-router.get('/today/by-service', requireRole('admin', 'management'), async (req, res) => {
+router.get('/today/by-service', requireRole('admin', 'admin_manager', 'management'), async (req, res) => {
   try {
     const areaId = req.query.areaId ? parseInt(String(req.query.areaId), 10) : undefined;
     const result = await indicatorService.getTodayIndicatorsByService(areaId);
@@ -37,7 +37,7 @@ router.get('/today/by-service', requireRole('admin', 'management'), async (req, 
 });
 
 // GET /api/indicators/range — indicators for date range
-router.get('/range', requireRole('admin', 'management'), async (req, res) => {
+router.get('/range', requireRole('admin', 'admin_manager', 'management'), async (req, res) => {
   try {
     const startDate = String(req.query.startDate || '');
     const endDate = String(req.query.endDate || '');

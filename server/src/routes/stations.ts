@@ -26,7 +26,7 @@ const updateSchema = z.object({
 
 router.use(authMiddleware);
 
-router.get('/', requireRole('admin', 'management', 'reception'), async (req, res) => {
+router.get('/', requireRole('admin', 'admin_manager', 'management', 'reception'), async (req, res) => {
   try {
     const areaId = req.query.areaId ? parseInt(String(req.query.areaId), 10) : undefined;
     const result = await stationService.listStations(areaId);
@@ -38,7 +38,7 @@ router.get('/', requireRole('admin', 'management', 'reception'), async (req, res
   }
 });
 
-router.post('/', requireRole('admin'), async (req, res) => {
+router.post('/', requireRole('admin', 'admin_manager'), async (req, res) => {
   try {
     const data = createSchema.parse(req.body);
     const result = await stationService.createStation(data.name, data.areaId, data.receptionUserId, data.description);
@@ -51,7 +51,7 @@ router.post('/', requireRole('admin'), async (req, res) => {
   }
 });
 
-router.patch('/:id', requireRole('admin'), async (req, res) => {
+router.patch('/:id', requireRole('admin', 'admin_manager'), async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
     const data = updateSchema.parse(req.body);
@@ -70,7 +70,7 @@ router.patch('/:id', requireRole('admin'), async (req, res) => {
   }
 });
 
-router.delete('/:id', requireRole('admin'), async (req, res) => {
+router.delete('/:id', requireRole('admin', 'admin_manager'), async (req, res) => {
   try {
     const id = parseInt(String(req.params.id), 10);
     await stationService.deleteStation(id);

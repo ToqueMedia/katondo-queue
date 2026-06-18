@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-06-18T23:02:24.963Z",
+  "completedAt": "2026-06-18T23:02:24.963Z",
+  "tasks": [
+    {
+      "id": "T2.100",
+      "description": "Restringir admin_manager a Dashboard, Serviços, Gestão de Senhas, Indicadores e Minha Conta",
+      "status": "completed",
+      "evidence": "Ficheiros do cliente atualizados com sucesso (app-shell.tsx e App.tsx limitados estritamente a Dashboard, Serviços, Gestão de Senhas, Indicadores e Minha Conta). Teste de fumo via endpoints do backend para admin_manager retorna 200 para permitidos e 401/403 para os negados (como users/areas/stations)."
+    }
+  ]
+}

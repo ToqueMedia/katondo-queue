@@ -106,3 +106,7 @@ dependencies {
     // DataStore for preferences
     implementation(libs.androidx.datastore.preferences)
 }
+
+// Workaround for VS Code IDE sync
+tasks.register("prepareKotlinBuildScriptModel") {}
+
