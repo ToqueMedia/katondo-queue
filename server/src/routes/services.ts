@@ -13,7 +13,7 @@ const createSchema = z.object({
   name: z.string().min(1),
   areaId: z.number().int(),
   ticketFormat: z.enum(['numeric', 'alphanumeric', 'custom']),
-  ticketPrefix: z.string().optional(),
+  ticketPrefix: z.string().nullish().transform((val) => val ?? undefined),
   ticketDigitCount: z.number().int().default(3),
   isPriority: z.boolean().default(false),
 });
@@ -21,7 +21,7 @@ const createSchema = z.object({
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   ticketFormat: z.enum(['numeric', 'alphanumeric', 'custom']).optional(),
-  ticketPrefix: z.string().optional(),
+  ticketPrefix: z.string().nullish().transform((val) => val ?? undefined),
   ticketDigitCount: z.number().int().optional(),
   active: z.boolean().optional(),
   isPriority: z.boolean().optional(),
