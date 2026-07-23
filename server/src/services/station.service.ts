@@ -1,6 +1,6 @@
 // Station service — CRUD + receptionist assignment (1:1) + station service association
 
-import { eq } from 'drizzle-orm';
+import { eq, or } from 'drizzle-orm';
 import { db } from '../db/connection.js';
 import { stations, services, stationServices } from '../db/schema.js';
 import { NotFoundError, ConflictError } from '../utils/errors.js';
@@ -26,9 +26,10 @@ export async function createStation(name: string, areaId: number, receptionUserI
     throw new Error('Failed to create station');
   }
 
-  // Inherit all services of the area by default
+  // Inherit all services of the area by default — including global services (areaId=0),
+  // which are shared across every area.
   const areaServices = await db.query.services.findMany({
-    where: eq(services.areaId, areaId),
+    where: or(eq(services.areaId, areaId), eq(services.areaId, 0)),
   });
 
   if (areaServices.length > 0) {
