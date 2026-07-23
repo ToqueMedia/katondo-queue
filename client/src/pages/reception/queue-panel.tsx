@@ -125,10 +125,17 @@ export default function ReceptionQueue() {
       return;
     }
     try {
+      // Ao terminar a sessão o backend liberta o posto (setActiveStation null/null),
+      // permitindo que outro recepcionista entre nesse posto de imediato.
       await apiLogout();
     } catch (e) {
       console.error('Logout API failed', e);
     }
+    // Disassociar totalmente o dispositivo do posto para libertá-lo por completo.
+    localStorage.removeItem('katondo_browser_station_id');
+    queueStore.setCurrentTicket(null);
+    queueStore.setNextTickets([]);
+    queueStore.setWaitingCount(0);
     authStore.logout();
     navigate('/login');
   };
