@@ -40,6 +40,7 @@ import TicketManagement from './pages/admin/ticket-management';
 import AdminSettings from './pages/admin/settings';
 import BackupManagement from './pages/admin/backup';
 import ReceptionQueue from './pages/reception/queue-panel';
+import DispenserPanel from './pages/dispenser/dispenser-panel';
 import ManagementDashboard from './pages/management/dashboard';
 import AdManagement from './pages/management/ad-management';
 import TicketFormatConfig from './pages/management/ticket-format-config';
@@ -101,6 +102,13 @@ export default function App() {
               <Route path="account" element={<Box minH="100vh" bg="#FAFAF9" p={8}><MyAccount /></Box>} />
               <Route path="*" element={<Navigate to="/reception/queue" replace />} />
             </Routes>
+          </RoleGuard>
+        } />
+
+        {/* Dispenser route — touch UI to emit senhas */}
+        <Route path="/dispenser" element={
+          <RoleGuard allowedRoles={['dispenser']}>
+            <DispenserPanel />
           </RoleGuard>
         } />
 
